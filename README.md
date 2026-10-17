@@ -2,6 +2,19 @@
 
 A chess game built with Python and Pygame for CUNY Tech Prep, Cohort 12.
 
+## Project Goal
+
+We're building a chess coach: a bot that finds the best move in any position and gives the player feedback on their own moves. After each move, the coach will:
+
+- **Recommend the best move** for the current position.
+- **Suggest a better piece to move** when moving a different piece would have improved the player's position more.
+- **Flag mistakes** when a piece was moved to a weak or losing square.
+- **Explain why** in plain language, for example "this leaves your knight undefended" or "this gives up control of the center."
+
+The bot's decisions and explanations will draw on chess datasets such as game databases, opening theory, and annotated positions.
+
+> **Status:** The board and GUI are done. The coaching bot is planned but not implemented yet.
+
 ## Group Members
 
 | Name | Role |
