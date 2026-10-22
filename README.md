@@ -42,6 +42,18 @@ cd chess
 python3 gui.py
 ```
 
+### Running the Website
+
+Requires [Node.js](https://nodejs.org/) 20 or newer.
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Then open http://localhost:5173. The coach panel calls a backend on port 8000. Until that backend exists, the coach shows as offline, but the board and move history still work.
+
 ## Controls
 
 | Input | Action |
@@ -57,4 +69,14 @@ python3 gui.py
 chess/
 ├── board.py   # Board state and move logic
 └── gui.py     # Pygame interface
+backend/       # coaching API (not started yet)
+frontend/      # React website
+└── src/
+    ├── App.jsx                     # game state, connects the panels
+    ├── api.js                      # calls to the backend
+    └── components/
+        ├── Board.jsx               # clickable board
+        ├── PromotionPicker.jsx     # choose a piece when a pawn promotes
+        ├── CoachChat.jsx           # coach messages, chat box, Hint button
+        └── MoveHistory.jsx         # numbered list of the game's moves
 ```
