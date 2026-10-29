@@ -54,6 +54,32 @@ npm run dev
 
 Then open http://localhost:5173. The coach panel calls a backend on port 8000. Until that backend exists, the coach shows as offline, but the board and move history still work.
 
+### Running the Backend
+
+```bash
+cd backend
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python -m app.data.build        # downloads and loads the datasets (see below)
+uvicorn app.main:app --reload --port 8000
+```
+
+## Datasets
+
+The coach's feedback draws on these sources. `python -m app.data.build` loads them into `backend/data/chess_data.sqlite`, which is about 1 GB and isn't committed.
+
+| Dataset | Source | What the coach uses it for |
+| --- | --- | --- |
+| Openings | [lichess-org/chess-openings](https://github.com/lichess-org/chess-openings) | Naming the opening and telling when a player leaves known theory |
+| Puzzles | [Lichess puzzle database](https://database.lichess.org/#puzzles) | Spotting tactics (forks, pins, hanging pieces) and explaining them in plain language |
+| Evaluations | [Lichess evaluations database](https://database.lichess.org/#evals) | Precomputed Stockfish analysis for common early-game positions |
+| Masters | [Lichess masters explorer](https://lichess.org/api#tag/Opening-Explorer) | How often strong players chose each move |
+
+The full puzzle and evaluation files are large, so the build keeps a subset: puzzles with at least 80 popularity and 1,000 plays, and evaluations for positions with 26 or more pieces taken from the first 5 million records. `python -m app.data.build --help` lists the options for keeping more.
+
+The masters explorer needs a free Lichess API token. Create one at https://lichess.org/account/oauth/token (no permissions needed) and set it as `LICHESS_TOKEN` before starting the backend. Without it, the other datasets still work.
+
 ## Controls
 
 | Input | Action |
@@ -69,7 +95,13 @@ Then open http://localhost:5173. The coach panel calls a backend on port 8000. U
 chess/
 ├── board.py   # Board state and move logic
 └── gui.py     # Pygame interface
-backend/       # coaching API (not started yet)
+backend/
+└── app/
+    ├── main.py, routes.py, schemas.py  # FastAPI app and endpoints
+    ├── coach.py                        # coaching logic (not implemented yet)
+    ├── engine.py                       # move search and evaluation (not implemented yet)
+    ├── knowledge.py                    # combines the datasets into facts about a position or move
+    └── data/                           # one module per dataset, plus build.py to load them
 frontend/      # React website
 └── src/
     ├── App.jsx                     # game state, connects the panels
