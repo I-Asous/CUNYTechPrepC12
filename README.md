@@ -13,7 +13,7 @@ We're building a chess coach: a bot that finds the best move in any position and
 
 The bot's decisions and explanations will draw on chess datasets such as game databases, opening theory, and annotated positions.
 
-> **Status:** The board and GUI are done. The coaching bot is planned but not implemented yet.
+> **Status:** The website and the coach work. The coach grades moves with Stockfish, explains them with rule-based descriptions and the datasets below, and answers chat questions by keyword matching (no AI model calls yet).
 
 ## Group Members
 
@@ -52,9 +52,11 @@ npm install
 npm run dev
 ```
 
-Then open http://localhost:5173. The coach panel calls a backend on port 8000. Until that backend exists, the coach shows as offline, but the board and move history still work.
+Then open http://localhost:5173. The coach panel calls the backend on port 8000. If the backend isn't running, the coach shows as offline, but the board and move history still work.
 
 ### Running the Backend
+
+Requires [Stockfish](https://stockfishchess.org/download/) (on macOS: `brew install stockfish`). If it isn't on your PATH, set `STOCKFISH_PATH` to its location.
 
 ```bash
 cd backend
@@ -98,9 +100,10 @@ chess/
 backend/
 └── app/
     ├── main.py, routes.py, schemas.py  # FastAPI app and endpoints
-    ├── coach.py                        # coaching logic (not implemented yet)
-    ├── engine.py                       # move search and evaluation (not implemented yet)
-    ├── knowledge.py                    # combines the datasets into facts about a position or move
+    ├── coach.py                        # grades moves, piece hints, best-move hints
+    ├── chatbot.py                      # answers chat questions by topic
+    ├── explain.py                      # plain-language reasons a move is good or bad
+    ├── engine.py                       # Stockfish wrapper
     └── data/                           # one module per dataset, plus build.py to load them
 frontend/      # React website
 └── src/

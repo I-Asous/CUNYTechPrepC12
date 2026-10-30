@@ -1,8 +1,8 @@
-"""HTTP endpoints. Each one hands its work to the coach module."""
+"""HTTP endpoints. Each one hands its work to the coach or chatbot module."""
 
 from fastapi import APIRouter
 
-from app import coach
+from app import chatbot, coach
 from app.schemas import (
     ChatRequest,
     ChatResponse,
@@ -38,4 +38,4 @@ def hint(request: HintRequest):
 @router.post("/chat", response_model=ChatResponse)
 def chat(request: ChatRequest):
     """Answer a free-form question about the game."""
-    return coach.chat(request.fen, request.history, request.message)
+    return {"reply": chatbot.reply(request.fen, request.history, request.message)}
