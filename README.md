@@ -96,8 +96,6 @@ The coach's feedback draws on these sources. `python -m app.data.build` loads th
 
 The full puzzle and evaluation files are large, so the build keeps a subset: puzzles with at least 80 popularity and 1,000 plays, and evaluations for positions with 26 or more pieces taken from the first 5 million records. `python -m app.data.build --help` lists the options for keeping more.
 
-The masters explorer needs a free Lichess API token. Create one at https://lichess.org/account/oauth/token (no permissions needed) and set it as `LICHESS_TOKEN` before starting the backend. Without it, the other datasets still work.
-
 ## Controls
 
 | Input | Action |
