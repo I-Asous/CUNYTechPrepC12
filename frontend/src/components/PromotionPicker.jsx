@@ -11,7 +11,7 @@ export default function PromotionPicker({ color, onPick, onCancel }) {
   return (
     <div className="overlay" onClick={onCancel}>
       <div className="promotion" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Choose promotion piece">
-        <p>Promote to</p>
+        <p>✨ Your pawn made it! Turn it into…</p>
         <div className="promotion-choices">
           {CHOICES.map(({ type, label }) => (
             <button key={type} onClick={() => onPick(type)} aria-label={label} title={label}>

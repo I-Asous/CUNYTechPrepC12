@@ -1,32 +1,50 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Chess } from "chess.js";
 
 import Board from "./components/Board.jsx";
+import BotPicker from "./components/BotPicker.jsx";
 import CoachChat from "./components/CoachChat.jsx";
+import Confetti from "./components/Confetti.jsx";
 import MoveHistory from "./components/MoveHistory.jsx";
 import PromotionPicker from "./components/PromotionPicker.jsx";
-import { askCoach, bestMoveHint, pieceHint, reviewMove } from "./api.js";
+import { askCoach, bestMoveHint, botMove, listBots, pieceHint, reviewMove } from "./api.js";
 
 const WELCOME = {
   id: 0,
   from: "coach",
-  text: "Hi! I'm your coach. Make a move and I'll tell you how it was. Pick up a piece and " +
-        "I'll tell you if it's the right one to move. Press Hint for the best move.",
+  text: "Hoo-hoo! I'm Hoot, your coach. Make a move and I'll tell you how it went. Pick up a " +
+        "piece and I'll tell you if it's the right one. Stuck? Press Hint!",
 };
-const OFFLINE_TEXT = "I can't reach the coaching server right now, so I can't give feedback. " +
-                     "You can keep playing in the meantime.";
+const OFFLINE_TEXT = "I'm napping right now (I can't reach the coaching server), so no feedback " +
+                     "for the moment. Keep playing and I'll wake up when it's back.";
 
 const COLOR_NAMES = { w: "White", b: "Black" };
+const BOT_MIN_DELAY_MS = 500;  // so instant bot replies don't look like a glitch
 
-function gameStatus(game) {
+function startMessage(opponent) {
+  if (!opponent) return "New game! You're playing both sides. 🎲";
+  const { bot, color } = opponent;
+  return `${bot.emoji} ${bot.name} (~${bot.rating}) wants to play! You're ${COLOR_NAMES[color]}. Good luck!`;
+}
+
+function gameStatus(game, opponent) {
   const mover = COLOR_NAMES[game.turn()];
-  if (game.isCheckmate()) return `Checkmate. ${COLOR_NAMES[game.turn() === "w" ? "b" : "w"]} wins.`;
-  if (game.isStalemate()) return "Draw by stalemate.";
-  if (game.isInsufficientMaterial()) return "Draw: not enough material to checkmate.";
-  if (game.isThreefoldRepetition()) return "Draw by threefold repetition.";
-  if (game.isDraw()) return "Draw by the 50-move rule.";
-  if (game.inCheck()) return `${mover} is in check.`;
-  return `${mover} to move.`;
+  const playerMoves = opponent && game.turn() === opponent.color;
+  if (game.isCheckmate()) {
+    if (!opponent) return `🏆 Checkmate! ${COLOR_NAMES[game.turn() === "w" ? "b" : "w"]} wins!`;
+    return playerMoves ? `🫣 Checkmate. ${opponent.bot.name} wins this one.` : "🏆 Checkmate! You win!";
+  }
+  if (game.isStalemate()) return "🤝 Stalemate. It's a draw!";
+  if (game.isInsufficientMaterial()) return "🤝 Draw: nobody has enough pieces left to checkmate.";
+  if (game.isThreefoldRepetition()) return "🔁 Draw by threefold repetition.";
+  if (game.isDraw()) return "😴 Draw by the 50-move rule.";
+  if (game.inCheck()) return playerMoves ? "⚡ You're in check!" : `⚡ ${mover} is in check!`;
+  if (!opponent) return `${mover} to move.`;
+  return playerMoves ? "Your move!" : `${opponent.bot.name}'s turn.`;
+}
+
+function playerWon(game, opponent) {
+  return game.isCheckmate() && (!opponent || game.turn() !== opponent.color);
 }
 
 function kingInCheckSquare(game) {
@@ -49,8 +67,38 @@ export default function App() {
   const [messages, setMessages] = useState([WELCOME]);
   const [online, setOnline] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [bots, setBots] = useState([]);
+  const [opponent, setOpponent] = useState(null);   // { bot, color: the player's color } or null for free play
+  const [gameId, setGameId] = useState(0);          // bumped on every new game, so stale bot replies are dropped
+  const [botThinking, setBotThinking] = useState(false);
   const nextId = useRef(1);
   const offlineNotified = useRef(false);
+  const botRequested = useRef(null);  // "gameId|fen" the bot was last asked to move in
+
+  const playerToMove = !opponent || game.turn() === opponent.color;
+
+  useEffect(() => {
+    listBots().then((list) => { setBots(list); setOnline(true); }).catch(() => {});
+  }, []);
+
+  // When it's the bot's turn, ask it for a move and play it.
+  useEffect(() => {
+    if (!opponent || playerToMove || game.isGameOver() || pendingPromotion) return;
+    const key = `${gameId}|${fen}`;
+    if (botRequested.current === key) return;
+    botRequested.current = key;
+
+    setBotThinking(true);
+    const delay = new Promise((resolve) => setTimeout(resolve, BOT_MIN_DELAY_MS));
+    Promise.all([callCoach(botMove(fen, opponent.bot.id)), delay]).then(([reply]) => {
+      if (botRequested.current !== key) return;  // new game or undo while waiting
+      setBotThinking(false);
+      if (!reply || game.fen() !== fen) return;
+      const uci = reply.move;
+      game.move({ from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci[4] });
+      setFen(game.fen());
+    });
+  }, [fen, gameId, opponent, playerToMove, pendingPromotion]);
 
   const history = useMemo(() => game.history({ verbose: true }), [game, fen]);
   const lastMove = history.at(-1) ?? null;
@@ -104,7 +152,8 @@ export default function App() {
     const review = await callCoach(reviewMove(fenBefore, move.lan));
     if (!review) return;
     setReviews((current) => ({ ...current, [`${ply}|${move.after}`]: review }));
-    if (game.fen() === move.after) {  // skip if the move was undone while we waited
+    // Skip if the move was undone while we waited (a bot reply on top of it is fine).
+    if (game.history({ verbose: true })[ply]?.after === move.after) {
       addMessage({ from: "coach", kind: "review", quality: review.quality, text: review.message });
     }
   }
@@ -119,7 +168,7 @@ export default function App() {
   }
 
   function handleSquareClick(square) {
-    if (game.isGameOver()) return;
+    if (game.isGameOver() || !playerToMove) return;
     const piece = game.get(square);
 
     if (piece && piece.color === game.turn()) {
@@ -138,18 +187,34 @@ export default function App() {
 
   function undo() {
     if (!game.undo()) return;
+    // Against a bot, take back the bot's reply too, so it's the player's turn again.
+    if (opponent && game.turn() !== opponent.color && game.history().length > 0) game.undo();
+    botRequested.current = null;
+    setBotThinking(false);
     setFen(game.fen());
     setSelected(null);
     setPendingPromotion(null);
   }
 
-  function newGame() {
+  function newGame(nextOpponent = opponent) {
     game.reset();
+    botRequested.current = null;
+    setGameId((id) => id + 1);
+    setOpponent(nextOpponent);
+    setFlipped(nextOpponent?.color === "b");
+    setBotThinking(false);
     setFen(game.fen());
     setSelected(null);
     setPendingPromotion(null);
     setReviews({});
-    setMessages([WELCOME]);
+    setMessages([WELCOME, { id: nextId.current++, from: "coach", text: startMessage(nextOpponent) }]);
+  }
+
+  function startGame(botId, colorChoice) {
+    const bot = bots.find((b) => b.id === botId);
+    if (!bot) return newGame(null);
+    const color = colorChoice === "random" ? (Math.random() < 0.5 ? "w" : "b") : colorChoice;
+    newGame({ bot, color });
   }
 
   async function requestHint() {
@@ -170,8 +235,9 @@ export default function App() {
   return (
     <div className="app">
       <header>
-        <h1>Chess Coach</h1>
-        <p>CUNY Tech Prep · Cohort 12</p>
+        <h1><span className="logo" aria-hidden="true">♞</span> Chess Coach</h1>
+        <p className="tagline">Play, practice and learn with a little help from your friends</p>
+        <p className="credit">CUNY Tech Prep · Cohort 12</p>
       </header>
 
       <main>
@@ -179,13 +245,19 @@ export default function App() {
           <Board board={game.board()} flipped={flipped} selected={selected} targets={targets}
                  lastMove={lastMove} checkSquare={kingInCheckSquare(game)} onSquareClick={handleSquareClick} />
           <div className="controls">
-            <p className="status">{gameStatus(game)}</p>
+            <p className="status">
+              {gameStatus(game, opponent)}
+              {botThinking && (
+                <span className="thinking"> {opponent.bot.emoji} is thinking<span className="dots"><span>.</span><span>.</span><span>.</span></span></span>
+              )}
+            </p>
             <div className="buttons">
               <button onClick={undo} disabled={history.length === 0}>Undo</button>
               <button onClick={() => setFlipped((f) => !f)}>Flip board</button>
-              <button onClick={newGame}>New game</button>
+              <button onClick={() => newGame()}>New game</button>
             </div>
           </div>
+          <BotPicker bots={bots} opponent={opponent} onStart={startGame} />
         </div>
 
         <div className="side-column">
@@ -193,6 +265,8 @@ export default function App() {
           <MoveHistory history={history} reviewFor={reviewFor} />
         </div>
       </main>
+
+      {playerWon(game, opponent) && <Confetti key={gameId} />}
 
       {pendingPromotion && (
         <PromotionPicker color={game.turn()}

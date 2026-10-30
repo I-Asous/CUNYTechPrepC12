@@ -67,6 +67,22 @@ python -m app.data.build        # downloads and loads the datasets (see below)
 uvicorn app.main:app --reload --port 8000
 ```
 
+## Practice Bots
+
+Pick an opponent and a color in the Opponent panel, then press Start game. The coach reviews your moves, not the bot's. Undo takes back your last move and the bot's reply.
+
+| Bot | Rating (rough) | How it plays |
+| --- | --- | --- |
+| Penny | ~400 | Random moves, grabs captures |
+| Rookie Ray | ~800 | Picks from Stockfish's top 8 moves, often not the best |
+| Casual Cal | ~1100 | Picks from Stockfish's top 5, usually a good one |
+| Club Player Clara | ~1500 | Stockfish limited to 1500 Elo |
+| Bookworm Bea | ~1800 | Follows opening theory from the openings dataset, then Stockfish at 1800 Elo |
+| Master Max | ~2200 | Stockfish limited to 2200 Elo |
+| Stockfish | ~3200 | Full strength |
+
+Bots are defined in `backend/app/bots.py`. Stockfish can't play below about 1320 Elo, so the weakest bots choose randomly among its top moves instead.
+
 ## Datasets
 
 The coach's feedback draws on these sources. `python -m app.data.build` loads them into `backend/data/chess_data.sqlite`, which is about 1 GB and isn't committed.
@@ -102,6 +118,7 @@ backend/
     ├── main.py, routes.py, schemas.py  # FastAPI app and endpoints
     ├── coach.py                        # grades moves, piece hints, best-move hints
     ├── chatbot.py                      # answers chat questions by topic
+    ├── bots.py                         # practice opponents
     ├── explain.py                      # plain-language reasons a move is good or bad
     ├── engine.py                       # Stockfish wrapper
     └── data/                           # one module per dataset, plus build.py to load them
@@ -113,5 +130,6 @@ frontend/      # React website
         ├── Board.jsx               # clickable board
         ├── PromotionPicker.jsx     # choose a piece when a pawn promotes
         ├── CoachChat.jsx           # coach messages, chat box, Hint button
-        └── MoveHistory.jsx         # numbered list of the game's moves
+        ├── MoveHistory.jsx         # numbered list of the game's moves
+        └── BotPicker.jsx           # choose an opponent and color
 ```

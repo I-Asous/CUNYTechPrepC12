@@ -56,9 +56,11 @@ def analyse(board, lines=1, moves=None):
             for info in infos if info.get("pv")]
 
 
-def score_move(board, move):
-    """Score of playing `move`, from the mover's point of view."""
-    return analyse(board, moves=[move])[0]["score"]
+def play(board, elo=None, think_time=THINK_TIME):
+    """The engine's move, optionally playing at roughly `elo` strength (1320-3190)."""
+    options = {"UCI_LimitStrength": True, "UCI_Elo": elo} if elo else {}
+    with _lock:
+        return _get_engine().play(board, chess.engine.Limit(time=think_time), options=options).move
 
 
 def best_move(fen):
