@@ -169,7 +169,7 @@ main {
 .buttons button,
 .chat-input button,
 .color-choice button,
-.opponent-form .start,
+.start,
 .bot-card {
   border: 2px solid var(--border);
   background: var(--surface);
@@ -194,21 +194,21 @@ main {
 .buttons button:active:not(:disabled),
 .chat-input button:active:not(:disabled),
 .color-choice button:active:not(:disabled),
-.opponent-form .start:active,
+.start:active,
 .bot-card:active {
   transform: translateY(2px) scale(0.97);
   box-shadow: 0 1px 0 var(--border);
 }
 
 .chat-input button[type="submit"],
-.opponent-form .start {
+.start {
   background: var(--accent);
   border-color: var(--accent);
   color: var(--accent-text);
   box-shadow: 0 3px 0 var(--accent-deep);
 }
 
-.opponent-form .start:hover {
+.start:hover {
   transform: translateY(-2px) scale(1.04);
   box-shadow: 0 5px 0 var(--accent-deep);
 }
@@ -483,7 +483,7 @@ input:focus-visible {
 .bot-cards {
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: minmax(58px, 1fr);
+  grid-auto-columns: minmax(54px, 1fr);
   gap: 6px;
   overflow-x: auto;
   padding: 4px 2px 8px;
@@ -578,7 +578,7 @@ input:focus-visible {
   box-shadow: 0 3px 0 var(--grape);
 }
 
-.opponent-form .start {
+.start {
   padding: 8px 18px;
   font-size: 1.02rem;
   font-weight: 600;
@@ -685,6 +685,301 @@ input:focus-visible {
 
 .chat-input button {
   white-space: nowrap;
+}
+
+/* ---------- Classic / 3D tabs ---------- */
+
+.mode-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  align-self: center;
+  border: 2px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+}
+
+.mode-tabs button {
+  border: none;
+  border-radius: 999px;
+  padding: 4px 12px;
+  background: none;
+  color: var(--muted);
+  font-family: var(--font-fun);
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: background 0.15s, color 0.15s, transform 0.15s var(--pop);
+}
+
+.mode-tabs button:hover {
+  color: var(--text);
+  transform: scale(1.05);
+}
+
+.mode-tabs button.active {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+/* ---------- 3D chess ---------- */
+
+.board3d {
+  width: 100%;
+  height: var(--board);
+  border-radius: 18px;
+  border: 8px solid var(--frame);
+  box-shadow: 0 8px 0 color-mix(in srgb, var(--frame) 70%, #000), 0 18px 30px rgba(59, 45, 74, 0.25);
+  background: radial-gradient(ellipse at 50% 30%, var(--surface), color-mix(in srgb, var(--grape) 22%, var(--bg)));
+  overflow: hidden;
+  touch-action: none;
+}
+
+.board3d canvas {
+  display: block;
+  cursor: grab;
+}
+
+.board3d canvas:active {
+  cursor: grabbing;
+}
+
+.loading-3d {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-fun);
+  font-size: 1.3rem;
+  color: var(--muted);
+}
+
+.card-divider {
+  width: 2px;
+  align-self: stretch;
+  margin: 6px 2px;
+  border-radius: 2px;
+  background: var(--border);
+}
+
+.bot-cards:has(.card-divider) {
+  grid-auto-columns: minmax(58px, 1fr);
+}
+
+.bot-cards .card-divider {
+  justify-self: center;
+}
+
+.variant-card.chosen {
+  border-color: var(--grape);
+  box-shadow: 0 3px 0 var(--grape);
+}
+
+.rules-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.rules-tagline {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.piece-rules,
+.rules-notes {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.88rem;
+}
+
+.piece-rules li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 7px 10px;
+  border-radius: 14px;
+}
+
+.piece-rules li:nth-child(odd) {
+  background: color-mix(in srgb, var(--border) 40%, transparent);
+}
+
+.piece-glyph {
+  flex-shrink: 0;
+  width: 1.6em;
+  text-align: center;
+  font-size: 1.3rem;
+  line-height: 1.2;
+  font-family: "Segoe UI Symbol", "Noto Sans Symbols 2", "Apple Symbols", sans-serif;
+}
+
+.piece-rules strong {
+  font-family: var(--font-fun);
+  font-weight: 600;
+}
+
+.rules-notes {
+  margin-top: 10px;
+  color: var(--muted);
+}
+
+.rules-notes li {
+  padding: 3px 0 3px 18px;
+  position: relative;
+}
+
+.rules-notes li::before {
+  content: "✦";
+  position: absolute;
+  left: 2px;
+  color: var(--accent);
+}
+
+/* ---------- Online games: chat, invite, name prompt ---------- */
+
+.message.system {
+  align-self: center;
+  max-width: 100%;
+  padding: 2px 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-align: center;
+}
+
+.chat-name {
+  display: block;
+  font-family: var(--font-fun);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.chat-name.b { color: var(--grape); }
+.chat-name.watcher { color: var(--muted); }
+
+.reactions {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.reactions button {
+  flex: 1;
+  padding: 3px 0;
+  border: 2px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font-fun);
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: transform 0.15s var(--pop);
+}
+
+.reactions button:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.12) rotate(-6deg);
+  border-color: var(--accent);
+}
+
+.reactions + .chat-input {
+  margin-top: 8px;
+}
+
+.invite-link {
+  display: flex;
+  gap: 8px;
+}
+
+.invite-link input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  font-size: 0.88rem;
+  padding: 7px 14px;
+  border: 2px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.invite-link input:focus {
+  outline: none;
+  border-color: var(--grape);
+}
+
+.invite-link .start {
+  flex-shrink: 0;
+}
+
+.seats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.seat {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--border) 45%, transparent);
+  font-family: var(--font-fun);
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.seat em {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.seat.here::after {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--best);
+}
+
+.seat.watchers {
+  color: var(--muted);
+}
+
+.name-prompt {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.name-prompt .panel {
+  width: min(100%, 440px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 22px;
+}
+
+.name-prompt .bot-description {
+  white-space: normal;
+}
+
+.link-button {
+  align-self: flex-start;
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.link-button:hover {
+  color: var(--accent);
 }
 
 /* ---------- Move history ---------- */

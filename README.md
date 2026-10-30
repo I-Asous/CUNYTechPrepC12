@@ -24,6 +24,34 @@ The bot's decisions and explanations will draw on chess datasets such as game da
 | Islam Asous | Member |
 | Maisha Tasnim Chowdhury | Member |
 
+## Tech Stack
+
+**Frontend** (`frontend/`)
+
+| Tool | Used for |
+| --- | --- |
+| [React](https://react.dev/) 19 | The website's UI |
+| [Vite](https://vite.dev/) 8 | Dev server and build; forwards `/api` requests (including WebSockets) to the backend |
+| [chess.js](https://github.com/jhlywa/chess.js) | Move rules for the classic board in the browser |
+| [Three.js](https://threejs.org/) 0.186 | The rotatable 3D board |
+| Web Workers | Run the 3D chess bot off the main thread |
+| Google Fonts (Fredoka, Nunito) | Typography |
+
+**Backend** (`backend/`)
+
+| Tool | Used for |
+| --- | --- |
+| Python 3 + [FastAPI](https://fastapi.tiangolo.com/) | The coaching API and online game rooms |
+| [Uvicorn](https://www.uvicorn.org/) | Runs the API server, including WebSockets for online games and chat |
+| [python-chess](https://python-chess.readthedocs.io/) | Move rules, board analysis and talking to Stockfish |
+| [Stockfish](https://stockfishchess.org/) | Chess engine behind move grading, hints and the classic bots |
+| SQLite | Local copy of the chess datasets |
+| [zstandard](https://github.com/indygreg/python-zstandard) | Reading the compressed Lichess data files |
+
+**Data:** the Lichess [opening names](https://github.com/lichess-org/chess-openings), [puzzle database](https://database.lichess.org/#puzzles), [evaluations database](https://database.lichess.org/#evals) and [masters explorer API](https://lichess.org/api#tag/Opening-Explorer). See [Datasets](#datasets).
+
+**Original prototype** (`chess/`): Python with [Pygame](https://www.pygame.org/).
+
 ## Getting Started
 
 ### Requirements
@@ -83,6 +111,29 @@ Pick an opponent and a color in the Opponent panel, then press Start game. The c
 
 Bots are defined in `backend/app/bots.py`. Stockfish can't play below about 1320 Elo, so the weakest bots choose randomly among its top moves instead.
 
+## 3D Chess
+
+The **🧊 3D Chess** tab has two three-dimensional variants, played against a bot in a rotatable 3D view (drag to spin, scroll to zoom). The "How to play" panel explains how each piece moves.
+
+| Variant | Board | About |
+| --- | --- | --- |
+| Raumschach | 5×5×5 | The classic space chess by Ferdinand Maack (1907). Adds the Unicorn, which moves through the corners of the cubes. |
+| Skyscraper | 8×8×3 | Our own variant: the normal chess army on three stacked boards, White on the bottom and Black on the top. |
+
+Raumschach's pawn rules have several historical versions. We use the commonly played one: pawns move one step forward or one level toward the enemy, capture one step diagonally in those directions, and promote on the far corner row (E5 for White, A1 for Black). Neither variant has castling or en passant.
+
+Stockfish only plays normal chess, so the 3D variants have their own rules engine and bot in `frontend/src/chess3d/`. The bot searches a few moves ahead in a Web Worker so the page stays smooth. There are three levels: Shelly 🐌 (easy), Otto 🐙 (medium) and Zorp 🛸 (hard). Coach Hoot doesn't cover 3D games.
+
+## Playing a Friend Online
+
+Pick the **Friend** card, choose your color and press Let's play. You get a link (and a short code) to send to a friend. When they open it and enter a name, the game starts. Moves and chat sync live over a WebSocket, and anyone else who opens the link can watch and chat.
+
+- The server checks every move, so the game can't be cheated by editing the page.
+- Refreshing the page reconnects you to your seat.
+- After the game, either player can start a rematch with colors swapped.
+- Coach Hoot sits out games against people, so there are no hints mid-game.
+- Games live in the backend's memory, so they disappear when it restarts. There are no accounts yet; players just pick a display name.
+
 ## Datasets
 
 The coach's feedback draws on these sources. `python -m app.data.build` loads them into `backend/data/chess_data.sqlite`, which is about 1 GB and isn't committed.
@@ -119,17 +170,29 @@ backend/
     ├── coach.py                        # grades moves, piece hints, best-move hints
     ├── chatbot.py                      # answers chat questions by topic
     ├── bots.py                         # practice opponents
+    ├── rooms.py                        # online games between people, with chat
     ├── explain.py                      # plain-language reasons a move is good or bad
     ├── engine.py                       # Stockfish wrapper
     └── data/                           # one module per dataset, plus build.py to load them
 frontend/      # React website
 └── src/
-    ├── App.jsx                     # game state, connects the panels
+    ├── App.jsx                     # bot games, and switching to an online game
     ├── api.js                      # calls to the backend
+    ├── useRoom.js                  # live connection to an online game
+    ├── chessUtils.js               # small helpers shared by both kinds of game
+    ├── chess3d/
+    │   ├── variants.js             # 3D boards, setups and rules text
+    │   ├── engine.js               # 3D move rules, check and game end
+    │   ├── bot.js, bot.worker.js   # the 3D bot, run off the main thread
+    │   ├── Board3D.jsx             # Three.js view
+    │   └── Chess3D.jsx             # the 3D chess page
     └── components/
         ├── Board.jsx               # clickable board
         ├── PromotionPicker.jsx     # choose a piece when a pawn promotes
         ├── CoachChat.jsx           # coach messages, chat box, Hint button
         ├── MoveHistory.jsx         # numbered list of the game's moves
-        └── BotPicker.jsx           # choose an opponent and color
+        ├── BotPicker.jsx           # choose an opponent and color
+        ├── OnlineGame.jsx          # a game against a friend
+        ├── GameChat.jsx            # chat between players
+        └── InvitePanel.jsx         # invite link and who's in the game
 ```
