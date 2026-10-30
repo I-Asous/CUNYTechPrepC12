@@ -28,6 +28,7 @@ export default function Board({ board, flipped, selected, targets, lastMove, che
           (row + col) % 2 === 0 ? "light" : "dark",
           name === selected && "selected",
           lastMove && (name === lastMove.from || name === lastMove.to) && "last-move",
+          lastMove && name === lastMove.to && "landed",
           name === checkSquare && "in-check",
           target && (target.capture ? "target-capture" : "target"),
         ].filter(Boolean).join(" ");

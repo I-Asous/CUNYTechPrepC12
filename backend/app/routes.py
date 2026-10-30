@@ -1,9 +1,12 @@
-"""HTTP endpoints. Each one hands its work to the coach module."""
+"""HTTP endpoints. Each one hands its work to the coach, chatbot or bots module."""
 
 from fastapi import APIRouter
 
-from app import coach
+from app import bots, chatbot, coach
 from app.schemas import (
+    Bot,
+    BotMoveRequest,
+    BotMoveResponse,
     ChatRequest,
     ChatResponse,
     HintRequest,
@@ -38,4 +41,16 @@ def hint(request: HintRequest):
 @router.post("/chat", response_model=ChatResponse)
 def chat(request: ChatRequest):
     """Answer a free-form question about the game."""
-    return coach.chat(request.fen, request.history, request.message)
+    return {"reply": chatbot.reply(request.fen, request.history, request.message)}
+
+
+@router.get("/bots", response_model=list[Bot])
+def list_bots():
+    """The opponents the player can choose from, weakest first."""
+    return bots.list_bots()
+
+
+@router.post("/bot-move", response_model=BotMoveResponse)
+def bot_move(request: BotMoveRequest):
+    """The chosen bot's reply in the position."""
+    return {"move": bots.choose_move(request.fen, request.bot)}

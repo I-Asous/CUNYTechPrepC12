@@ -48,3 +48,20 @@ class ChatRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     reply: str
+
+
+class Bot(BaseModel):
+    id: str
+    name: str
+    emoji: str  # avatar
+    rating: int  # rough estimate
+    description: str
+
+
+class BotMoveRequest(BaseModel):
+    fen: str
+    bot: str  # Bot.id
+
+
+class BotMoveResponse(BaseModel):
+    move: str  # UCI

@@ -1,18 +1,32 @@
-// Calls to the coaching backend. The backend isn't built yet, so every call
-// currently fails -- the UI catches that and shows the coach as offline.
+// Calls to the coaching backend. If it isn't running, every call fails and
+// the UI shows the coach as offline.
 //
 // Positions are sent as FEN strings and moves in UCI notation ("e2e4", "e7e8q").
 
-async function post(path, body) {
-  const response = await fetch(`/api${path}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
+async function request(path, options) {
+  const response = await fetch(`/api${path}`, options);
   if (!response.ok) {
     throw new Error(`${path} failed with status ${response.status}`);
   }
   return response.json();
+}
+
+function post(path, body) {
+  return request(path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+
+// Opponents to practice against, weakest first: [{ id, name, rating, description }]
+export function listBots() {
+  return request("/bots");
+}
+
+// The bot's reply in the position: { move }
+export function botMove(fen, bot) {
+  return post("/bot-move", { fen, bot });
 }
 
 // Grade a move: { quality: "best" | "good" | "inaccuracy" | "mistake" | "blunder", message }
