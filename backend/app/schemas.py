@@ -65,3 +65,11 @@ class BotMoveRequest(BaseModel):
 
 class BotMoveResponse(BaseModel):
     move: str  # UCI
+
+
+class CreateRoomRequest(BaseModel):
+    color: Literal["w", "b", "random"] = "random"  # the creator's color
+
+
+class CreateRoomResponse(BaseModel):
+    code: str

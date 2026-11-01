@@ -29,6 +29,18 @@ export function botMove(fen, bot) {
   return post("/bot-move", { fen, bot });
 }
 
+// Start an online game against a friend. `color` is the creator's: "w", "b" or "random". { code }
+export function createRoom(color) {
+  return post("/rooms", { color });
+}
+
+// WebSocket URL for an online game (see useRoom.js for the messages).
+export function roomSocketUrl(code, name, playerId) {
+  const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+  const params = new URLSearchParams({ name, player_id: playerId ?? "" });
+  return `${protocol}://${window.location.host}/api/rooms/${code}/ws?${params}`;
+}
+
 // Grade a move: { quality: "best" | "good" | "inaccuracy" | "mistake" | "blunder", message }
 export function reviewMove(fen, move) {
   return post("/review", { fen, move });

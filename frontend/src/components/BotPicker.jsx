@@ -1,6 +1,8 @@
 import { useState } from "react";
 
 const FREE_PLAY = { id: "", emoji: "🎲", name: "Just me", short: "Just me", description: "No bot. You play both sides." };
+const FRIEND = { id: "friend", emoji: "🧑‍🤝‍🧑", name: "A friend", short: "Friend", rating: null,
+                 description: "Play someone online and chat mid-game. You'll get a link to send them." };
 
 // "Club Player Clara" -> "Clara", to keep the cards small.
 const shortName = (bot) => bot.short ?? bot.name.split(" ").at(-1);
@@ -16,7 +18,7 @@ const COLORS = [
 export default function BotPicker({ bots, opponent, onStart }) {
   const [botId, setBotId] = useState(opponent?.bot.id ?? "");
   const [color, setColor] = useState("w");
-  const choices = [FREE_PLAY, ...bots];
+  const choices = [FREE_PLAY, FRIEND, ...bots];
   const chosen = choices.find((bot) => bot.id === botId) ?? FREE_PLAY;
 
   return (
@@ -35,7 +37,7 @@ export default function BotPicker({ bots, opponent, onStart }) {
                   onClick={() => setBotId(bot.id)} title={`${bot.name}: ${bot.description}`} aria-label={bot.name}>
             <span className="bot-emoji" aria-hidden="true">{bot.emoji}</span>
             <span className="bot-name">{shortName(bot)}</span>
-            <span className="bot-rating">{bot.rating ? `~${bot.rating}` : "free play"}</span>
+            <span className="bot-rating">{bot.rating ? `~${bot.rating}` : bot.id ? "online" : "free play"}</span>
           </button>
         ))}
       </div>

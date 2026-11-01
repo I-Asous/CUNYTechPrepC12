@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import { Chess } from "chess.js";
 
 import Board from "./components/Board.jsx";
@@ -6,8 +6,27 @@ import BotPicker from "./components/BotPicker.jsx";
 import CoachChat from "./components/CoachChat.jsx";
 import Confetti from "./components/Confetti.jsx";
 import MoveHistory from "./components/MoveHistory.jsx";
+import OnlineGame from "./components/OnlineGame.jsx";
 import PromotionPicker from "./components/PromotionPicker.jsx";
-import { askCoach, bestMoveHint, botMove, listBots, pieceHint, reviewMove } from "./api.js";
+import { askCoach, bestMoveHint, botMove, createRoom, listBots, pieceHint, reviewMove } from "./api.js";
+import { kingInCheckSquare, toMove } from "./chessUtils.js";
+
+// Three.js is big, so the 3D page only loads when someone opens it.
+const Chess3D = lazy(() => import("./chess3d/Chess3D.jsx"));
+
+// Which page we're on lives in the address bar, so links can be shared and
+// the back button works: ?room=ABC123 for an online game, ?mode=3d for 3D chess.
+function pageFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const room = params.get("room")?.toUpperCase();
+  if (room) return { mode: "room", room };
+  return { mode: params.get("mode") === "3d" ? "3d" : "classic", room: null };
+}
+
+const MODES = [
+  { mode: "classic", label: "♟️ Classic" },
+  { mode: "3d", label: "🧊 3D Chess" },
+];
 
 const WELCOME = {
   id: 0,
@@ -47,17 +66,51 @@ function playerWon(game, opponent) {
   return game.isCheckmate() && (!opponent || game.turn() !== opponent.color);
 }
 
-function kingInCheckSquare(game) {
-  if (!game.inCheck()) return null;
-  for (const row of game.board()) {
-    for (const piece of row) {
-      if (piece && piece.type === "k" && piece.color === game.turn()) return piece.square;
-    }
+export default function App() {
+  const [page, setPage] = useState(pageFromUrl);
+
+  useEffect(() => {
+    const sync = () => setPage(pageFromUrl());
+    window.addEventListener("popstate", sync);
+    return () => window.removeEventListener("popstate", sync);
+  }, []);
+
+  function goTo(mode, room = null) {
+    const query = room ? `?room=${room}` : mode === "3d" ? "?mode=3d" : window.location.pathname;
+    window.history.pushState(null, "", query);
+    setPage({ mode: room ? "room" : mode, room });
   }
-  return null;
+
+  return (
+    <div className="app">
+      <header>
+        <h1><span className="logo" aria-hidden="true">♞</span> Chess Coach</h1>
+        <nav className="mode-tabs" aria-label="Game type">
+          {MODES.map(({ mode, label }) => (
+            <button key={mode} type="button" aria-current={page.mode === mode ? "page" : undefined}
+                    className={page.mode === mode || (mode === "classic" && page.mode === "room") ? "active" : undefined}
+                    onClick={() => goTo(mode)}>
+              {label}
+            </button>
+          ))}
+        </nav>
+        <p className="tagline">Play, practice and learn with a little help from your friends</p>
+        <p className="credit">CUNY Tech Prep · Cohort 12</p>
+      </header>
+
+      {page.mode === "room" && <OnlineGame key={page.room} code={page.room} onLeave={() => goTo("classic")} />}
+      {page.mode === "classic" && <BotGame onCreateRoom={(code) => goTo("room", code)} />}
+      {page.mode === "3d" && (
+        <Suspense fallback={<main className="loading-3d">Building the cube… 🧊</main>}>
+          <Chess3D />
+        </Suspense>
+      )}
+    </div>
+  );
 }
 
-export default function App() {
+// Playing alone: against a bot or both sides, with Coach Hoot's feedback.
+function BotGame({ onCreateRoom }) {
   const [game] = useState(() => new Chess());
   const [fen, setFen] = useState(() => game.fen());   // bumps a re-render after every change to `game`
   const [selected, setSelected] = useState(null);
@@ -95,7 +148,7 @@ export default function App() {
       setBotThinking(false);
       if (!reply || game.fen() !== fen) return;
       const uci = reply.move;
-      game.move({ from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci[4] });
+      game.move(toMove(uci));
       setFen(game.fen());
     });
   }, [fen, gameId, opponent, playerToMove, pendingPromotion]);
@@ -210,7 +263,12 @@ export default function App() {
     setMessages([WELCOME, { id: nextId.current++, from: "coach", text: startMessage(nextOpponent) }]);
   }
 
-  function startGame(botId, colorChoice) {
+  async function startGame(botId, colorChoice) {
+    if (botId === "friend") {
+      const created = await callCoach(createRoom(colorChoice));
+      if (created) onCreateRoom(created.code);
+      return;
+    }
     const bot = bots.find((b) => b.id === botId);
     if (!bot) return newGame(null);
     const color = colorChoice === "random" ? (Math.random() < 0.5 ? "w" : "b") : colorChoice;
@@ -233,13 +291,7 @@ export default function App() {
   const reviewFor = (ply) => history[ply] && reviews[`${ply}|${history[ply].after}`];
 
   return (
-    <div className="app">
-      <header>
-        <h1><span className="logo" aria-hidden="true">♞</span> Chess Coach</h1>
-        <p className="tagline">Play, practice and learn with a little help from your friends</p>
-        <p className="credit">CUNY Tech Prep · Cohort 12</p>
-      </header>
-
+    <>
       <main>
         <div className="board-column">
           <Board board={game.board()} flipped={flipped} selected={selected} targets={targets}
@@ -273,6 +325,6 @@ export default function App() {
                          onPick={(type) => { playMove(pendingPromotion.from, pendingPromotion.to, type); setPendingPromotion(null); }}
                          onCancel={() => setPendingPromotion(null)} />
       )}
-    </div>
+    </>
   );
 }

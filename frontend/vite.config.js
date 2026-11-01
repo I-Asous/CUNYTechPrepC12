@@ -1,12 +1,13 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
-// /api requests go to the FastAPI backend (not built yet) on port 8000.
+// /api requests (including the online games' WebSockets) go to the FastAPI
+// backend on port 8000.
 export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      "/api": "http://localhost:8000",
+      "/api": { target: "http://localhost:8000", ws: true },
     },
   },
 });

@@ -1,14 +1,16 @@
 """HTTP endpoints. Each one hands its work to the coach, chatbot or bots module."""
 
-from fastapi import APIRouter
+from fastapi import APIRouter, WebSocket
 
-from app import bots, chatbot, coach
+from app import bots, chatbot, coach, rooms
 from app.schemas import (
     Bot,
     BotMoveRequest,
     BotMoveResponse,
     ChatRequest,
     ChatResponse,
+    CreateRoomRequest,
+    CreateRoomResponse,
     HintRequest,
     HintResponse,
     PieceHintRequest,
@@ -54,3 +56,15 @@ def list_bots():
 def bot_move(request: BotMoveRequest):
     """The chosen bot's reply in the position."""
     return {"move": bots.choose_move(request.fen, request.bot)}
+
+
+@router.post("/rooms", response_model=CreateRoomResponse)
+def create_room(request: CreateRoomRequest):
+    """Start an online game against a friend; share the code to invite them."""
+    return {"code": rooms.create_room(request.color)}
+
+
+@router.websocket("/rooms/{code}/ws")
+async def room_socket(websocket: WebSocket, code: str, name: str = "", player_id: str = ""):
+    """Live connection to an online game: moves, chat and presence."""
+    await rooms.handle_socket(websocket, code, name, player_id)
