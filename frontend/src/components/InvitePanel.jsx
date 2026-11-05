@@ -24,7 +24,7 @@ export default function InvitePanel({ code, players, you, watchers }) {
   return (
     <section className="panel setup invite">
       <div className="panel-header">
-        <h2><span aria-hidden="true">🔗</span> Invite a friend</h2>
+        <h2>Invite a friend</h2>
       </div>
       <p className="setup-description">Send them this link, or the code <strong>{code}</strong></p>
 

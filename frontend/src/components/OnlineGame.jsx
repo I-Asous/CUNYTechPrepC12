@@ -34,7 +34,7 @@ function NamePrompt({ onDone, onLeave }) {
   return (
     <main className="name-prompt">
       <form className="panel" onSubmit={(e) => { e.preventDefault(); if (draft.trim()) onDone(draft.trim()); }}>
-        <h2><span aria-hidden="true">👋</span> What should we call you?</h2>
+        <h2>What should we call you?</h2>
         <p className="bot-description">Your friend will see this name in the game and the chat.</p>
         <div className="invite-link">
           <input autoFocus value={draft} maxLength={24} onChange={(e) => setDraft(e.target.value)}

@@ -25,7 +25,7 @@ export default function GameChat({ messages, me, online, onSend }) {
   return (
     <section className="panel coach game-chat">
       <div className="panel-header">
-        <h2><span aria-hidden="true">💬</span> Game chat</h2>
+        <h2>Game chat</h2>
         <span className={`status-dot ${online ? "online" : "offline"}`}>{online ? "Connected" : "Reconnecting"}</span>
       </div>
 

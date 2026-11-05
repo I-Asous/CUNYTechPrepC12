@@ -24,7 +24,7 @@ export default function BotPicker({ bots, opponent, onStart }) {
   return (
     <section className="panel setup">
       <div className="panel-header">
-        <h2><span aria-hidden="true">🎭</span> Pick a rival</h2>
+        <h2>Pick a rival</h2>
       </div>
 
       <h3 className="setup-label" id="rival-label">Opponent</h3>

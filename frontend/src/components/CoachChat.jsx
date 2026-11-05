@@ -25,7 +25,7 @@ export default function CoachChat({ messages, online, busy, onSend, onHint }) {
   return (
     <section className="panel coach">
       <div className="panel-header">
-        <h2><span aria-hidden="true">🦉</span> Coach Hoot</h2>
+        <h2>Coach Hoot</h2>
         <span className={`status-dot ${online ? "online" : "offline"}`}>{online ? "Awake" : "Napping"}</span>
       </div>
 

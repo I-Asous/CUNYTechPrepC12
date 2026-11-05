@@ -29,7 +29,7 @@ export default function MoveHistory({ history, reviewFor }) {
 
   return (
     <section className="panel history">
-      <h2><span aria-hidden="true">📜</span> The story so far</h2>
+      <h2>The story so far</h2>
       {history.length === 0 ? (
         <p className="empty">Once upon a time, nobody had moved yet…</p>
       ) : (

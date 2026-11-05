@@ -35,7 +35,7 @@ The bot's decisions and explanations will draw on chess datasets such as game da
 | [chess.js](https://github.com/jhlywa/chess.js) | Move rules for the classic board in the browser                                        |
 | [Three.js](https://threejs.org/) 0.186         | The rotatable 3D board                                                                 |
 | Web Workers                                   | Run the 3D chess bot off the main thread                                               |
-| Google Fonts (Fredoka, Nunito)                | Typography                                                                             |
+| Google Fonts (Inter Tight)                    | Typography                                                                             |
 
 **Backend** (`backend/`)
 

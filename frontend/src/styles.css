@@ -1,409 +1,251 @@
+/* Chess Coach looks like an architectural drawing: one ink on white paper
+   (in dark mode too), hairline rules that run from edge to edge, square
+   corners, no shadows. Everything sits on one grid, so the header's dividers
+   line up with the columns below. */
+
 :root {
-  --bg: #fff8ec;
-  --bg-dots: rgba(255, 150, 110, 0.16);
-  --surface: #ffffff;
-  --border: #f1dcc3;
-  --text: #3b2d4a;
-  --muted: #8a7b97;
-  --accent: #ff7a59;
-  --accent-deep: #d9573a;
-  --accent-text: #ffffff;
+  --paper: #ffffff;
+  --ink: #d63a22;           /* text, outlines, solid fills (4.6:1 on paper) */
+  --line: #ef7a66;          /* hairline rules */
+  --line-soft: #f8c9bf;     /* rules inside panels */
+  --tint: #fdeae6;          /* hover fills */
+  --hatch: #f5ad9f;         /* hatching on dark squares, 3D dark tiles */
+  --grid: rgba(239, 122, 102, 0.13);  /* graph paper behind the board */
+  --piece-light: #ffffff;
+  --piece-dark: var(--ink);
 
-  /* Playful extras: confetti, stickers, the logo */
-  --sun: #ffc94d;
-  --mint: #6fcf9d;
-  --sky: #5fb8f5;
-  --grape: #a685ee;
+  --font: "Inter Tight", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-pieces: "Segoe UI Symbol", "Noto Sans Symbols 2", "DejaVu Sans", "Apple Symbols", sans-serif;
 
-  --light-square: #fff1d2;
-  --dark-square: #9dd3b4;
-  --frame: #f6b38f;
-  --selected: rgba(255, 201, 77, 0.8);
-  --last-move: rgba(255, 201, 77, 0.45);
-  --check: rgba(255, 70, 70, 0.75);
-  --target: rgba(166, 133, 238, 0.55);
-
-  --best: #2fa66b;
-  --good: #63a95e;
-  --inaccuracy: #e0a800;
-  --mistake: #f07a2a;
-  --blunder: #e5484d;
-
-  --coach-bubble: #fff0e2;
-  --user-bubble: #a685ee;
-  --user-text: #ffffff;
-
-  --font-fun: "Fredoka", "Nunito", system-ui, sans-serif;
-  --font-body: "Nunito", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --pop: cubic-bezier(0.34, 1.56, 0.64, 1);
-
-  /* Every game page has three columns: the board in the middle, with a side
-     column of the same width on each side so the board sits in the center.
-     The board is as big as the window allows: whatever height is left after
-     the header and the controls under the board (--reserved), and whatever
-     width is left after the side columns, the gaps and the page padding. */
-  --reserved: 155px;
-  --side: clamp(260px, 22vw, 340px);
-  --board: clamp(260px, min(100dvh - var(--reserved), 100vw - 2 * var(--side) - 84px), 820px);
-  /* The 3D board's view can be wider than it is tall, up to this. */
-  --board3d-max: 1000px;
+  /* The frame: a margin of paper, then rails at both edges, a side column
+     of the same width on each side, and the board in the middle. */
+  --gutter: 10px;
+  --rail: 32px;
+  --side: clamp(250px, 21vw, 330px);
+  /* The flat board is as big as the window allows: whatever height is left
+     after the frame, the header and the status bar (--reserved), and
+     whatever width is left after the rails, the side columns and a margin. */
+  --reserved: 215px;
+  --board: clamp(240px, min(100dvh - var(--reserved), 100vw - 2 * var(--side) - 2 * var(--rail) - 2 * var(--gutter) - 42px), 820px);
 
   color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #1f1a2e;
-    --bg-dots: rgba(166, 133, 238, 0.12);
-    --surface: #2a2340;
-    --border: #3e3560;
-    --text: #f5eeff;
-    --muted: #b5a8cc;
-    --accent: #ff8a6b;
-    --accent-deep: #c9583d;
-    --accent-text: #1f1a2e;
-    --light-square: #f3e4c4;
-    --dark-square: #7fbf9c;
-    --frame: #6b4f9e;
-    --coach-bubble: #3a3057;
-    --user-bubble: #8e6ddb;
-    color-scheme: dark;
-  }
-}
-
 * {
   box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
 }
 
 body {
   margin: 0;
-  background-color: var(--bg);
-  background-image: radial-gradient(var(--bg-dots) 2px, transparent 2.5px);
-  background-size: 26px 26px;
-  color: var(--text);
-  font-family: var(--font-body);
-  line-height: 1.5;
+  padding: var(--gutter);
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+h1, h2, h3 {
+  margin: 0;
+  font-weight: 400;
 }
 
 button {
   font: inherit;
+  color: inherit;
   cursor: pointer;
 }
 
 button:disabled {
-  opacity: 0.45;
+  opacity: 0.35;
   cursor: default;
-}
-
-h1, h2 {
-  font-family: var(--font-fun);
-  font-weight: 600;
-}
-
-.app {
-  height: 100dvh;
-  display: flex;
-  flex-direction: column;
-  padding: 14px 20px 18px;
-}
-
-/* ---------- Header ---------- */
-
-header {
-  display: flex;
-  align-items: baseline;
-  gap: 4px 14px;
-  white-space: nowrap;
-  width: calc(2 * var(--side) + var(--board) + 44px);
-  max-width: 100%;
-  margin: 0 auto 12px;
-}
-
-header h1 {
-  margin: 0;
-  font-size: 1.8rem;
-  letter-spacing: 0.01em;
-}
-
-.logo {
-  display: inline-block;
-  color: var(--accent);
-  transform-origin: 50% 90%;
-  animation: hop 3.2s ease-in-out infinite;
-}
-
-header .tagline {
-  flex: 1;
-  min-width: 0;
-  margin: 0;
-  color: var(--muted);
-  font-weight: 600;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-header .credit {
-  margin: 0 0 0 auto;
-  font-size: 0.8rem;
-  color: var(--muted);
-}
-
-@keyframes hop {
-  0%, 70%, 100% { transform: translateY(0) rotate(0); }
-  78% { transform: translateY(-8px) rotate(-10deg); }
-  86% { transform: translateY(0) rotate(6deg); }
-  92% { transform: translateY(-2px) rotate(0); }
-}
-
-main {
-  flex: 1;
-  min-height: 0;
-  display: grid;
-  grid-template-columns: var(--side) var(--board) var(--side);
-  justify-content: center;
-  gap: 22px;
-}
-
-/* ---------- Buttons ---------- */
-
-/* Chunky "candy" buttons that squish when pressed. */
-.buttons button,
-.chat-input button,
-.start,
-.bot-card {
-  border: 2px solid var(--border);
-  background: var(--surface);
-  color: var(--text);
-  border-radius: 999px;
-  padding: 7px 14px;
-  font-family: var(--font-fun);
-  font-weight: 500;
-  box-shadow: 0 3px 0 var(--border);
-  transition: transform 0.15s var(--pop), box-shadow 0.15s, border-color 0.15s, background 0.15s;
-}
-
-.buttons button:hover:not(:disabled),
-.chat-input button.secondary:hover,
-.bot-card:hover:not(:disabled) {
-  border-color: var(--accent);
-  transform: translateY(-2px) rotate(-1deg);
-  box-shadow: 0 5px 0 var(--border);
-}
-
-.buttons button:active:not(:disabled),
-.chat-input button:active:not(:disabled),
-.start:active,
-.bot-card:active:not(:disabled) {
-  transform: translateY(2px) scale(0.97);
-  box-shadow: 0 1px 0 var(--border);
-}
-
-.chat-input button[type="submit"],
-.start {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--accent-text);
-  box-shadow: 0 3px 0 var(--accent-deep);
-}
-
-.start:hover {
-  transform: translateY(-2px) scale(1.04);
-  box-shadow: 0 5px 0 var(--accent-deep);
 }
 
 button:focus-visible,
 input:focus-visible {
-  outline: 3px solid var(--grape);
+  outline: 2px solid var(--ink);
   outline-offset: 2px;
 }
 
-/* ---------- Board ---------- */
+@keyframes blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
 
+/* ---------- The frame ---------- */
+
+.app {
+  height: calc(100dvh - 2 * var(--gutter));
+  display: grid;
+  grid-template-columns: var(--rail) var(--side) minmax(0, 1fr) var(--side) var(--rail);
+  grid-template-rows: auto minmax(0, 1fr);
+  border: 1px solid var(--line);
+}
+
+/* The header spans the whole width, with cells over each column below. */
+header {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
+  border-bottom: 1px solid var(--line);
+}
+
+header .corner:first-child { border-right: 1px solid var(--line); }
+header .corner:last-child { border-left: 1px solid var(--line); }
+
+.masthead {
+  padding: 14px 16px;
+  border-right: 1px solid var(--line);
+}
+
+/* Outlined letters, like a line drawing. */
+.logo {
+  font-size: 2.6rem;
+  font-weight: 400;
+  line-height: 0.9;
+  letter-spacing: 0.01em;
+  text-transform: lowercase;
+  color: transparent;
+  -webkit-text-stroke: 1px var(--ink);
+}
+
+.statement {
+  margin: 0;
+  padding: 14px 16px;
+  max-width: 46em;
+  font-size: 1.05rem;
+  line-height: 1.3;
+}
+
+.credit {
+  margin: 0;
+  padding: 14px 16px;
+  border-left: 1px solid var(--line);
+  font-size: 0.75rem;
+  font-weight: 300;
+}
+
+/* Rails down both edges, with labels turned on their side. */
+.rail {
+  grid-row: 2;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.rail-left {
+  grid-column: 1;
+  border-right: 1px solid var(--line);
+}
+
+.rail-right {
+  grid-column: 5;
+  border-left: 1px solid var(--line);
+}
+
+.rail-left button,
+.rail-right span {
+  display: flex;
+  align-items: center;
+  min-height: 130px;
+  padding: 12px 0;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: none;
+  font-size: 0.75rem;
+  text-transform: lowercase;
+  letter-spacing: 0.02em;
+}
+
+/* Left labels read upwards, right labels read downwards. */
+.rail-left button {
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.rail-left button span {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
+.rail-left button:hover {
+  background: var(--tint);
+}
+
+.rail-left button.active {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.rail-right span {
+  justify-content: flex-start;
+  writing-mode: vertical-rl;
+  padding: 12px 0;
+  font-weight: 300;
+}
+
+/* ---------- Game pages: three columns under the header ---------- */
+
+main {
+  grid-column: 2 / 5;
+  grid-row: 2;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: subgrid;
+  counter-reset: panel;
+}
+
+/* The middle column: graph paper, the board in the middle, a status bar. */
 .board-column {
   min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-position: -1px -1px;
 }
 
-.board {
-  display: grid;
-  grid-template-columns: repeat(8, 1fr);
-  width: var(--board);
-  aspect-ratio: 1;
-  border-radius: 18px;
-  overflow: hidden;
-  border: 8px solid var(--frame);
-  box-shadow: 0 8px 0 color-mix(in srgb, var(--frame) 70%, #000), 0 18px 30px rgba(59, 45, 74, 0.25);
-  user-select: none;
-}
-
-.square {
-  position: relative;
-  border: none;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  container-type: size;
-}
-
-.square.light { background: var(--light-square); }
-.square.dark { background: var(--dark-square); }
-
-/* Overlays are stacked inset shadows so a square can be, say, both the
-   last move and a capture target. */
-.square.last-move { box-shadow: inset 0 0 0 100vmax var(--last-move); }
-.square.selected { box-shadow: inset 0 0 0 100vmax var(--selected); }
-.square.in-check { background-image: radial-gradient(circle, var(--check) 0%, transparent 70%); }
-.square.in-check .piece { animation: shiver 0.5s ease-in-out 2; }
-
-.square.target::after {
-  content: "";
-  position: absolute;
-  width: 30%;
-  height: 30%;
-  border-radius: 50%;
-  background: var(--target);
-  animation: bloom 0.25s var(--pop);
-}
-
-.square.target-capture::after {
-  content: "";
-  position: absolute;
-  inset: 5%;
-  border-radius: 50%;
-  border: 5px dashed var(--target);
-  animation: spin 6s linear infinite;
-}
-
-.square:focus-visible {
-  outline: 3px solid var(--grape);
-  outline-offset: -3px;
-}
-
-.coord {
-  position: absolute;
-  font-size: 11px;
-  font-weight: 700;
-  font-family: var(--font-fun);
-  pointer-events: none;
-}
-
-.coord.rank { top: 2px; left: 5px; }
-.coord.file { bottom: 1px; right: 5px; }
-.square.light .coord { color: color-mix(in srgb, var(--dark-square) 80%, #000); }
-.square.dark .coord { color: var(--light-square); }
-
-.piece {
-  position: relative;
-  z-index: 1;
-  font-size: 78cqh;
-  line-height: 1;
-  font-family: "Segoe UI Symbol", "Noto Sans Symbols 2", "DejaVu Sans", "Apple Symbols", sans-serif;
-  transition: transform 0.2s var(--pop);
-}
-
-.piece.white {
-  color: #ffffff;
-  -webkit-text-stroke: 1.5px #3b2d4a;
-  paint-order: stroke fill;
-  text-shadow: 0 2px 0 rgba(59, 45, 74, 0.25);
-}
-
-.piece.black {
-  color: #3b2d4a;
-  text-shadow: 0 2px 0 rgba(255, 255, 255, 0.35);
-}
-
-.square:hover .piece { transform: translateY(-2px); }
-.square.selected .piece { transform: translateY(-6px) scale(1.08); animation: wiggle 0.6s ease-in-out infinite; }
-.square.landed .piece { animation: plop 0.35s var(--pop); }
-
-@keyframes plop {
-  0% { transform: translateY(-14%) scale(1.25); }
-  100% { transform: translateY(0) scale(1); }
-}
-
-@keyframes wiggle {
-  0%, 100% { rotate: -4deg; }
-  50% { rotate: 4deg; }
-}
-
-@keyframes shiver {
-  0%, 100% { translate: 0; }
-  25% { translate: -3px; }
-  75% { translate: 3px; }
-}
-
-@keyframes bloom {
-  from { scale: 0; }
-  to { scale: 1; }
-}
-
-@keyframes spin {
-  to { rotate: 360deg; }
-}
-
-/* The status and the buttons share a row; on a small board the buttons wrap
-   under the status. */
-.controls {
-  width: 100%;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px 12px;
-  margin-top: 16px;
-}
-
-.status {
-  flex: 1 1 150px;
-  min-width: 0;
-  margin: 0;
-  line-height: 1.2;
-  font-family: var(--font-fun);
-  font-weight: 600;
-  font-size: 1.1rem;
-}
-
-.status .thinking {
-  font-weight: 500;
-  color: var(--muted);
-}
-
-.dots span {
-  display: inline-block;
-  animation: bounce 1s ease-in-out infinite;
-}
-
-.dots span:nth-child(2) { animation-delay: 0.15s; }
-.dots span:nth-child(3) { animation-delay: 0.3s; }
-
-@keyframes bounce {
-  0%, 60%, 100% { transform: translateY(0); }
-  30% { transform: translateY(-5px); }
-}
-
-.buttons {
-  display: flex;
-  gap: 8px;
-  white-space: nowrap;
-}
-
-/* ---------- Side panels ---------- */
-
-/* The side column fills the window height; the chat grows to fill it and
-   scrolls inside itself. */
 .side-column {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
   min-width: 0;
   min-height: 0;
-  padding-bottom: 5px;  /* room for the panels' drop shadow */
+  display: flex;
+  flex-direction: column;
 }
 
+/* The left column: the setup panel on top, the moves filling the rest. */
+.setup-column {
+  border-right: 1px solid var(--line);
+  overflow-y: auto;
+}
+
+.board-column + .side-column {
+  border-left: 1px solid var(--line);
+}
+
+/* ---------- Panels ---------- */
+
+.panel {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.side-column > .panel:last-child {
+  border-bottom: 0;
+}
+
+/* Panels fill their column, and their lists scroll inside them. */
 .panel.coach {
   flex: 1;
   min-height: 0;
@@ -411,365 +253,190 @@ input:focus-visible {
   flex-direction: column;
 }
 
-.panel {
-  background: var(--surface);
-  border: 2px solid var(--border);
-  border-radius: 22px;
-  padding: 16px 18px;
-  box-shadow: 0 5px 0 var(--border);
-}
-
-.panel h2 {
-  margin: 0;
-  font-size: 1.2rem;
-}
-
 .panel-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: baseline;
   gap: 8px;
   margin-bottom: 12px;
 }
 
-.status-dot {
+/* Small numbered labels: "01 pick a rival". */
+.panel h2 {
   font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--muted);
+  font-weight: 500;
+  text-transform: lowercase;
+  letter-spacing: 0.01em;
+}
+
+.panel h2::before {
+  counter-increment: panel;
+  content: counter(panel, decimal-leading-zero);
+  margin-right: 12px;
+  font-weight: 300;
+}
+
+.status-dot {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  font-size: 0.72rem;
+  text-transform: lowercase;
 }
 
 .status-dot::before {
   content: "";
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: var(--muted);
-}
-
-.status-dot.online::before { background: var(--best); animation: pulse 2s ease-in-out infinite; }
-.status-dot.offline::before { background: var(--blunder); }
-
-@keyframes pulse {
-  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--best) 60%, transparent); }
-  50% { box-shadow: 0 0 0 5px transparent; }
-}
-
-/* ---------- Game setup: picking a rival, a 3D game, or inviting a friend ---------- */
-
-/* The left column: the setup panel on top, the moves filling the rest. */
-.setup-column {
-  overflow-y: auto;
-}
-
-.setup-column .history {
-  flex: 1;
-  min-height: 130px;
-  display: flex;
-  flex-direction: column;
-}
-
-.setup-column .history-scroll {
-  flex: 1;
-  min-height: 0;
-  max-height: none;
-}
-
-.setup {
-  flex-shrink: 0;
-  padding: 14px 16px;
-}
-
-.setup .panel-header {
-  margin-bottom: 0;
-}
-
-.setup-label {
-  margin: 10px 0 6px;
-  font-family: var(--font-body);
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-.setup-description {
-  margin: 10px 0 0;
-  font-size: 0.82rem;
-  line-height: 1.35;
-  color: var(--muted);
-}
-
-.setup-description strong {
-  color: var(--text);
-}
-
-.setup > .start {
-  width: 100%;
-  margin-top: 14px;
-}
-
-.offline-note {
-  margin: 6px 0 0;
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: var(--muted);
-}
-
-/* One row of cards; scrolls sideways when there isn't room. */
-.bot-cards {
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(54px, 1fr);
-  gap: 6px;
-  overflow-x: auto;
-  padding: 4px 2px 8px;
-  margin: -4px -2px -8px;
-  scroll-snap-type: x proximity;
-}
-
-.bot-cards > * {
-  scroll-snap-align: start;
-}
-
-/* Lots of cards in a side column: rows of three instead. */
-.bot-cards.wrap {
-  grid-auto-flow: row;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.bot-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1px;
-  padding: 8px 2px 6px;
-  border-radius: 16px;
-  min-width: 0;
-}
-
-.bot-card .bot-emoji {
-  font-size: 1.45rem;
-  line-height: 1.2;
-  transition: transform 0.25s var(--pop);
-}
-
-.bot-card:hover:not(:disabled) .bot-emoji { transform: scale(1.15) rotate(-8deg); }
-
-.bot-card .bot-name {
-  font-size: 0.78rem;
-  font-weight: 600;
-  line-height: 1.15;
-  text-align: center;
-  max-width: 100%;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.bot-card .bot-rating {
-  font-family: var(--font-body);
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: var(--muted);
-}
-
-.bot-card.chosen {
-  border-color: var(--accent);
-  background: var(--coach-bubble);
-  box-shadow: 0 3px 0 var(--accent-deep);
-}
-
-.bot-card.chosen .bot-emoji { animation: hop 1.6s ease-in-out infinite; }
-
-.bot-description {
-  margin: 0;
-  min-width: 0;
-  font-size: 0.85rem;
-  color: var(--muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.bot-description strong {
-  color: var(--text);
-}
-
-.variant-card.chosen,
-.color-card.chosen {
-  border-color: var(--grape);
-  box-shadow: 0 3px 0 var(--grape);
-}
-
-.start {
-  padding: 8px 18px;
-  font-size: 1.02rem;
-  font-weight: 600;
-}
-
-/* ---------- Coach chat ---------- */
-
-.messages {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
-  padding: 2px 4px 2px 2px;
-}
-
-.message {
-  position: relative;
-  max-width: 88%;
-  padding: 9px 13px;
-  border-radius: 18px;
-  font-size: 0.93rem;
-  overflow-wrap: anywhere;
-  animation: float-in 0.35s var(--pop);
-}
-
-@keyframes float-in {
-  from { opacity: 0; transform: translateY(8px) scale(0.95); }
-  to { opacity: 1; transform: none; }
-}
-
-.message.coach {
-  align-self: flex-start;
-  background: var(--coach-bubble);
-  border-bottom-left-radius: 6px;
-  border: 2px solid transparent;
-}
-
-.message.user {
-  align-self: flex-end;
-  background: var(--user-bubble);
-  color: var(--user-text);
-  border-bottom-right-radius: 6px;
-}
-
-.message.best { border-color: var(--best); }
-.message.good { border-color: var(--good); }
-.message.inaccuracy { border-color: var(--inaccuracy); }
-.message.mistake { border-color: var(--mistake); }
-.message.blunder { border-color: var(--blunder); }
-
-.sticker {
-  float: right;
-  margin: -18px -16px 2px 8px;
-  font-size: 1.5rem;
-  line-height: 1;
-  animation: stick 0.5s var(--pop) 0.1s both;
-}
-
-@keyframes stick {
-  from { transform: scale(0) rotate(-40deg); }
-  to { transform: scale(1) rotate(12deg); }
-}
-
-.message.typing {
-  display: flex;
-  gap: 5px;
-  padding: 12px 14px;
-}
-
-.message.typing span {
   width: 7px;
   height: 7px;
-  border-radius: 50%;
-  background: var(--muted);
-  animation: bounce 1s ease-in-out infinite;
+  border: 1px solid var(--ink);
 }
 
-.message.typing span:nth-child(2) { animation-delay: 0.15s; }
-.message.typing span:nth-child(3) { animation-delay: 0.3s; }
+.status-dot.online::before {
+  background: var(--ink);
+  animation: blink 2s linear infinite;
+}
 
-.chat-input {
+/* ---------- Buttons ---------- */
+
+.buttons button,
+.chat-input button,
+.start {
+  border: 1px solid var(--ink);
+  border-radius: 0;
+  background: var(--paper);
+  color: var(--ink);
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.buttons button:hover:not(:disabled),
+.chat-input button:hover:not(:disabled) {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* Solid buttons for the main action; they hollow out on hover. */
+.start,
+.chat-input button[type="submit"] {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.start:hover:not(:disabled),
+.chat-input button[type="submit"]:hover:not(:disabled) {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+/* Buttons in a row share their borders. */
+.buttons {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 14px;
-}
-
-.chat-input input {
-  flex: 1;
-  min-width: 0;
-  font: inherit;
-  padding: 7px 14px;
-  border: 2px solid var(--border);
-  border-radius: 999px;
-  background: var(--bg);
-  color: var(--text);
-}
-
-.chat-input input:focus {
-  outline: none;
-  border-color: var(--grape);
-}
-
-.chat-input button {
   white-space: nowrap;
 }
 
-/* Coach Hoot's input has two buttons, too many for one row of a side column:
-   the input gets its own row, with Send and Hint side by side under it. */
-.chat-input.with-hint input {
-  flex-basis: 100%;
+.buttons button + button {
+  margin-left: -1px;
 }
 
-.chat-input.with-hint button {
-  flex: 1;
+/* ---------- Flat board ---------- */
+
+/* The gaps between squares show the board's background: a hairline grid. */
+.board {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 1px;
+  width: var(--board);
+  aspect-ratio: 1;
+  margin: auto;
+  border: 1px solid var(--ink);
+  background: var(--line);
+  user-select: none;
 }
 
-/* ---------- Classic / 3D tabs ---------- */
-
-.mode-tabs {
-  display: flex;
-  gap: 4px;
-  padding: 3px;
-  align-self: center;
-  border: 2px solid var(--border);
-  border-radius: 999px;
-  background: var(--surface);
-}
-
-.mode-tabs button {
+.square {
+  position: relative;
   border: none;
-  border-radius: 999px;
-  padding: 4px 12px;
-  background: none;
-  color: var(--muted);
-  font-family: var(--font-fun);
-  font-weight: 600;
-  font-size: 0.9rem;
-  transition: background 0.15s, color 0.15s, transform 0.15s var(--pop);
+  border-radius: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  container-type: size;
+  background: var(--paper);
 }
 
-.mode-tabs button:hover {
-  color: var(--text);
-  transform: scale(1.05);
+.square.dark {
+  background: repeating-linear-gradient(-45deg, var(--hatch) 0 1px, transparent 1px 7px), var(--paper);
 }
 
-.mode-tabs button.active {
-  background: var(--accent);
-  color: var(--accent-text);
+.square:hover {
+  outline: 1px solid var(--ink);
+  outline-offset: -1px;
 }
 
-/* ---------- 3D chess ---------- */
+.square.last-move { box-shadow: inset 0 0 0 100vmax color-mix(in srgb, var(--ink) 15%, transparent); }
+.square.selected { box-shadow: inset 0 0 0 3px var(--ink); }
+.square.in-check {
+  background-image: repeating-linear-gradient(45deg, var(--ink) 0 1.5px, transparent 1.5px 6px);
+}
 
-/* Fills the middle column, top to bottom (minus the controls). */
+/* A move target is a small square; a capture is a frame around the piece. */
+.square.target::after {
+  content: "";
+  position: absolute;
+  width: 20%;
+  height: 20%;
+  background: var(--ink);
+}
+
+.square.target-capture::after {
+  content: "";
+  position: absolute;
+  inset: 5%;
+  border: 2px solid var(--ink);
+}
+
+.square:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
+}
+
+.coord {
+  position: absolute;
+  font-size: 10px;
+  font-weight: 500;
+  pointer-events: none;
+}
+
+.coord.rank { top: 2px; left: 4px; }
+.coord.file { bottom: 1px; right: 4px; }
+
+.piece {
+  position: relative;
+  z-index: 1;
+  font-size: 78cqh;
+  line-height: 1;
+  font-family: var(--font-pieces);
+}
+
+.piece.white {
+  color: var(--piece-light);
+  -webkit-text-stroke: 1.5px var(--ink);
+  paint-order: stroke fill;
+}
+
+.piece.black {
+  color: var(--piece-dark);
+}
+
+/* ---------- 3D board ---------- */
+
 .board3d {
-  width: 100%;
   flex: 1;
   min-height: 0;
-  border-radius: 18px;
-  border: 8px solid var(--frame);
-  box-shadow: 0 8px 0 color-mix(in srgb, var(--frame) 70%, #000), 0 18px 30px rgba(59, 45, 74, 0.25);
-  background: radial-gradient(ellipse at 50% 30%, var(--surface), color-mix(in srgb, var(--grape) 22%, var(--bg)));
+  width: 100%;
   overflow: hidden;
   touch-action: none;
 }
@@ -787,238 +454,312 @@ input:focus-visible {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-fun);
+  font-weight: 300;
+}
+
+/* ---------- Status bar under the board ---------- */
+
+/* The status and the buttons share a row; on a narrow column the buttons
+   wrap under the status. */
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  padding: 9px 14px;
+  border-top: 1px solid var(--line);
+  background: var(--paper);
+}
+
+.status {
+  flex: 1 1 160px;
+  min-width: 0;
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+.status .thinking {
+  font-weight: 300;
+}
+
+.dots span {
+  animation: blink 1s linear infinite;
+}
+
+.dots span:nth-child(2) { animation-delay: 0.2s; }
+.dots span:nth-child(3) { animation-delay: 0.4s; }
+
+/* ---------- Game setup: picking a rival, a 3D game, or inviting a friend ---------- */
+
+.setup {
+  flex-shrink: 0;
+}
+
+.setup .panel-header {
+  margin-bottom: 0;
+}
+
+.setup-label {
+  margin: 14px 0 6px;
+  font-size: 0.72rem;
+  font-weight: 400;
+  text-transform: lowercase;
+}
+
+.setup-description {
+  margin: 8px 0 0;
+  font-size: 0.8rem;
+  font-weight: 300;
+  line-height: 1.35;
+}
+
+.setup-description strong {
+  font-weight: 500;
+}
+
+.setup > .start {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 14px;
+  padding: 10px 12px;
+  font-size: 0.95rem;
+}
+
+.setup > .start::after {
+  content: "→";
+}
+
+.offline-note {
+  margin: 6px 0 0;
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+/* Cards in a grid that share their borders, like a table. One row that
+   scrolls sideways, or rows of three in a side column. */
+.bot-cards {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(54px, 1fr);
+  overflow-x: auto;
+  padding: 0 1px 1px 0;
+  scroll-snap-type: x proximity;
+}
+
+.bot-cards > * {
+  scroll-snap-align: start;
+}
+
+.bot-cards.wrap {
+  grid-auto-flow: row;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.bot-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  margin: 0 -1px -1px 0;
+  padding: 8px 2px 6px;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.bot-card:hover:not(:disabled) {
+  background: var(--tint);
+}
+
+.bot-card.chosen {
+  position: relative;
+  z-index: 1;
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.bot-card .bot-emoji {
   font-size: 1.3rem;
-  color: var(--muted);
+  line-height: 1.2;
+  filter: grayscale(1);
 }
 
-/* The 3D board isn't square, so its middle column can be wider than a flat
-   board's. */
-.app:has(> .chess3d) header {
-  width: calc(2 * var(--side) + var(--board3d-max) + 44px);
+.bot-card .bot-name {
+  max-width: 100%;
+  font-size: 0.78rem;
+  font-weight: 500;
+  line-height: 1.15;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-main.chess3d {
-  grid-template-columns: var(--side) minmax(0, var(--board3d-max)) var(--side);
+.bot-card .bot-rating {
+  font-size: 0.68rem;
+  font-weight: 300;
 }
 
-.chess3d .board-column {
-  align-items: stretch;
-  min-height: 0;
-}
+/* ---------- Chat: Coach Hoot and online games ---------- */
 
-.rules-scroll {
+.messages {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding-right: 4px;
-}
-
-.rules-tagline {
-  margin: 0 0 10px;
-  color: var(--muted);
-  font-weight: 600;
-  font-size: 0.9rem;
-}
-
-.piece-rules,
-.rules-notes {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  font-size: 0.88rem;
-}
-
-.piece-rules li {
   display: flex;
-  gap: 10px;
-  align-items: flex-start;
-  padding: 7px 10px;
-  border-radius: 14px;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.piece-rules li:nth-child(odd) {
-  background: color-mix(in srgb, var(--border) 40%, transparent);
-}
-
-.piece-glyph {
-  flex-shrink: 0;
-  width: 1.6em;
-  text-align: center;
-  font-size: 1.3rem;
-  line-height: 1.2;
-  font-family: "Segoe UI Symbol", "Noto Sans Symbols 2", "Apple Symbols", sans-serif;
-}
-
-.piece-rules strong {
-  font-family: var(--font-fun);
-  font-weight: 600;
-}
-
-.rules-notes {
-  margin-top: 10px;
-  color: var(--muted);
-}
-
-.rules-notes li {
-  padding: 3px 0 3px 18px;
+.message {
   position: relative;
+  max-width: 90%;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  font-size: 0.88rem;
+  overflow-wrap: anywhere;
 }
 
-.rules-notes li::before {
-  content: "✦";
-  position: absolute;
-  left: 2px;
-  color: var(--accent);
+.message.coach {
+  align-self: flex-start;
 }
 
-/* ---------- Online games: chat, invite, name prompt ---------- */
+.message.user {
+  align-self: flex-end;
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* Reviews of mistakes get a heavier rule. */
+.message.mistake,
+.message.blunder {
+  border-color: var(--ink);
+  border-left-width: 4px;
+}
+
+.sticker {
+  float: right;
+  margin: -16px -14px 2px 8px;
+  padding: 0 2px;
+  background: var(--paper);
+  font-size: 1.2rem;
+  line-height: 1;
+  filter: grayscale(1);
+}
+
+.message.typing {
+  display: flex;
+  gap: 4px;
+  padding: 11px 12px;
+}
+
+.message.typing span {
+  width: 6px;
+  height: 6px;
+  background: var(--ink);
+  animation: blink 1s linear infinite;
+}
+
+.message.typing span:nth-child(2) { animation-delay: 0.2s; }
+.message.typing span:nth-child(3) { animation-delay: 0.4s; }
 
 .message.system {
   align-self: center;
   max-width: 100%;
-  padding: 2px 10px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--muted);
+  padding: 0 8px;
+  border: 0;
+  font-size: 0.75rem;
+  font-weight: 300;
   text-align: center;
 }
 
 .chat-name {
   display: block;
-  font-family: var(--font-fun);
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--accent);
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-transform: lowercase;
 }
 
-.chat-name.b { color: var(--grape); }
-.chat-name.watcher { color: var(--muted); }
-
-.reactions {
+.chat-input {
   display: flex;
-  gap: 6px;
-  margin-top: 10px;
+  flex-wrap: wrap;
+  margin-top: 12px;
 }
 
-.reactions button {
-  flex: 1;
-  padding: 3px 0;
-  border: 2px solid var(--border);
-  border-radius: 999px;
-  background: var(--surface);
-  color: var(--text);
-  font-family: var(--font-fun);
-  font-weight: 600;
-  font-size: 0.9rem;
-  transition: transform 0.15s var(--pop);
-}
-
-.reactions button:hover:not(:disabled) {
-  transform: translateY(-2px) scale(1.12) rotate(-6deg);
-  border-color: var(--accent);
-}
-
-.reactions + .chat-input {
-  margin-top: 8px;
-}
-
-.invite-link {
-  display: flex;
-  gap: 8px;
-}
-
-.invite-link input {
+.chat-input input {
   flex: 1;
   min-width: 0;
   font: inherit;
   font-size: 0.88rem;
-  padding: 7px 14px;
-  border: 2px solid var(--border);
-  border-radius: 999px;
-  background: var(--bg);
-  color: var(--text);
+  padding: 7px 10px;
+  border: 1px solid var(--ink);
+  border-radius: 0;
+  background: var(--paper);
+  color: var(--ink);
 }
 
+.chat-input input::placeholder,
+.invite-link input::placeholder {
+  color: var(--ink);
+  opacity: 0.55;
+}
+
+.chat-input input:focus,
 .invite-link input:focus {
   outline: none;
-  border-color: var(--grape);
+  background: var(--tint);
 }
 
-.invite-link .start {
-  flex-shrink: 0;
+.chat-input button {
+  margin-left: -1px;
+  white-space: nowrap;
 }
 
-/* In the side column, the link and the copy button stack. */
-.invite .invite-link {
-  flex-direction: column;
+/* Coach Hoot's input has two buttons, too many for one row of a side column:
+   the input gets its own row, with Send and Hint side by side under it. */
+.chat-input.with-hint input {
+  flex-basis: 100%;
+}
+
+.chat-input.with-hint button {
+  flex: 1;
+  margin-top: -1px;
+}
+
+.chat-input.with-hint input + button {
+  margin-left: 0;
+}
+
+.reactions {
+  display: flex;
   margin-top: 10px;
+  padding-right: 1px;
 }
 
-.seats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+.reactions button {
+  flex: 1;
+  margin-right: -1px;
+  padding: 4px 0;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  background: var(--paper);
+  font-size: 0.85rem;
 }
 
-.seat {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 12px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--border) 45%, transparent);
-  font-family: var(--font-fun);
-  font-weight: 500;
-  font-size: 0.9rem;
+.reactions button:hover:not(:disabled) {
+  background: var(--tint);
 }
 
-.seat em {
-  color: var(--muted);
-  font-weight: 400;
-}
-
-.seat.here::after {
-  content: "";
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--best);
-}
-
-.seat.watchers {
-  color: var(--muted);
-}
-
-.name-prompt {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.name-prompt .panel {
-  width: min(100%, 440px);
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 22px;
-}
-
-.name-prompt .bot-description {
-  white-space: normal;
-}
-
-.link-button {
-  align-self: flex-start;
-  border: none;
-  background: none;
-  padding: 0;
-  color: var(--muted);
-  font-weight: 700;
-}
-
-.link-button:hover {
-  color: var(--accent);
+.reactions + .chat-input {
+  margin-top: 8px;
 }
 
 /* ---------- Move history ---------- */
@@ -1029,7 +770,8 @@ main.chess3d {
 
 .history .empty {
   margin: 0;
-  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 300;
   font-style: italic;
 }
 
@@ -1038,100 +780,258 @@ main.chess3d {
   overflow-y: auto;
 }
 
+.setup-column .history {
+  flex: 1;
+  min-height: 130px;
+  display: flex;
+  flex-direction: column;
+}
+
+.setup-column .history-scroll {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+}
+
 .history table {
   width: 100%;
-  border-collapse: separate;
-  border-spacing: 0 3px;
+  border-collapse: collapse;
+  font-size: 0.88rem;
   font-variant-numeric: tabular-nums;
+}
+
+.history th,
+.history td {
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--line-soft);
+  text-align: left;
 }
 
 .history th {
   width: 3em;
-  text-align: left;
-  color: var(--muted);
-  font-weight: 600;
+  font-weight: 300;
 }
-
-.history td,
-.history th {
-  padding: 3px 8px;
-}
-
-.history tr:nth-child(odd) td,
-.history tr:nth-child(odd) th {
-  background: color-mix(in srgb, var(--border) 40%, transparent);
-}
-
-.history tr th { border-radius: 10px 0 0 10px; }
-.history tr td:last-child { border-radius: 0 10px 10px 0; }
 
 .history td.last {
-  font-weight: 800;
-  color: var(--accent);
+  background: var(--ink);
+  color: var(--paper);
 }
 
 .mark {
-  display: inline-block;
   margin-left: 4px;
-  font-weight: 800;
+  font-weight: 600;
 }
 
-.mark.best { color: var(--sun); text-shadow: 0 0 6px color-mix(in srgb, var(--sun) 70%, transparent); }
-.mark.inaccuracy { color: var(--inaccuracy); }
-.mark.mistake { color: var(--mistake); }
-.mark.blunder { color: var(--blunder); }
+/* ---------- 3D rules ---------- */
+
+.rules-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.rules-tagline {
+  margin: 0 0 10px;
+  font-size: 0.85rem;
+  font-weight: 300;
+}
+
+.piece-rules,
+.rules-notes {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.84rem;
+}
+
+.piece-rules li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 8px 0;
+  border-top: 1px solid var(--line-soft);
+}
+
+.piece-glyph {
+  flex-shrink: 0;
+  width: 1.5em;
+  text-align: center;
+  font-size: 1.25rem;
+  line-height: 1.1;
+  font-family: var(--font-pieces);
+}
+
+.piece-rules strong {
+  font-weight: 600;
+}
+
+.rules-notes {
+  margin-top: 10px;
+  font-weight: 300;
+}
+
+.rules-notes li {
+  position: relative;
+  padding: 3px 0 3px 18px;
+}
+
+.rules-notes li::before {
+  content: "—";
+  position: absolute;
+  left: 0;
+}
+
+/* ---------- Online games: invite and name prompt ---------- */
+
+.invite-link {
+  display: flex;
+}
+
+.invite-link input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 7px 10px;
+  border: 1px solid var(--ink);
+  border-radius: 0;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.invite-link .start {
+  flex-shrink: 0;
+  margin-left: -1px;
+}
+
+/* In the side column, the link and the copy button stack. */
+.invite .invite-link {
+  flex-direction: column;
+  margin-top: 10px;
+}
+
+.invite .invite-link .start {
+  margin: -1px 0 0;
+}
+
+.seats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.seat {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border: 1px solid var(--line);
+  font-size: 0.82rem;
+}
+
+.seat em {
+  font-weight: 300;
+}
+
+.seat.here::after {
+  content: "";
+  width: 6px;
+  height: 6px;
+  background: var(--ink);
+}
+
+.seat.watchers {
+  border-style: dashed;
+}
+
+.name-prompt {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.name-prompt .panel {
+  width: min(100%, 440px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 22px;
+  border: 1px solid var(--ink);
+}
+
+.name-prompt .bot-description {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 300;
+}
+
+.link-button {
+  align-self: flex-start;
+  border: none;
+  background: none;
+  padding: 0;
+  font-size: 0.85rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.link-button:hover {
+  text-decoration-thickness: 2px;
+}
 
 /* ---------- Promotion dialog ---------- */
 
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(31, 26, 46, 0.5);
+  z-index: 10;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 10;
   padding: 16px;
+  background: color-mix(in srgb, var(--paper) 80%, transparent);
 }
 
 .promotion {
-  background: var(--surface);
-  border-radius: 22px;
-  border: 2px solid var(--border);
-  padding: 18px 22px;
-  text-align: center;
-  animation: float-in 0.3s var(--pop);
+  padding: 16px 18px;
+  border: 1px solid var(--ink);
+  background: var(--paper);
 }
 
 .promotion p {
   margin: 0 0 12px;
-  font-family: var(--font-fun);
-  font-weight: 600;
-  font-size: 1.1rem;
+  font-size: 0.95rem;
+  font-weight: 500;
 }
 
 .promotion-choices {
   display: flex;
-  gap: 10px;
+  padding-right: 1px;
 }
 
 .promotion-choices button {
   width: 64px;
   height: 64px;
-  border: 2px solid var(--border);
-  border-radius: 16px;
-  background: var(--light-square);
-  box-shadow: 0 3px 0 var(--border);
+  margin-right: -1px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  background: var(--paper);
   container-type: size;
-  transition: transform 0.15s var(--pop);
 }
 
 .promotion-choices button:hover {
-  border-color: var(--accent);
-  transform: translateY(-3px) rotate(-4deg);
+  position: relative;
+  z-index: 1;
+  border-color: var(--ink);
+  background: var(--tint);
 }
 
-/* ---------- Confetti ---------- */
+/* ---------- Confetti: squares and hairlines ---------- */
 
 .confetti {
   position: fixed;
@@ -1144,9 +1044,8 @@ main.chess3d {
 .confetti span {
   position: absolute;
   top: -20px;
-  width: 9px;
-  height: 14px;
-  border-radius: 2px;
+  width: 8px;
+  height: 8px;
   opacity: 0;
   animation-name: fall;
   animation-timing-function: cubic-bezier(0.25, 0.6, 0.45, 1);
@@ -1154,9 +1053,8 @@ main.chess3d {
 }
 
 .confetti span.round {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
+  width: 14px;
+  height: 2px;
 }
 
 @keyframes fall {
@@ -1180,36 +1078,77 @@ main.chess3d {
 
 /* ---------- Narrow screens ---------- */
 
-/* Too narrow (or short) for three columns: stack them, board first, and let
-   the page scroll. */
+/* Too narrow (or short) for three columns: everything stacks in one column,
+   board first, the rails turn into a bar, and the page scrolls. */
 @media (max-width: 1000px), (max-height: 560px) {
-  .app {
-    height: auto;
-    padding: 16px 16px 32px;
+  :root {
+    --gutter: 8px;
+    --board: min(100vw - 2 * var(--gutter) - 34px, max(260px, 100dvh - 170px));
   }
 
-  main,
-  main.chess3d {
+  .app {
+    height: auto;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+  }
+
+  header {
+    grid-column: 1;
     grid-template-columns: minmax(0, 1fr);
   }
 
-  /* A flat board is no taller than the window, so it fits on a landscape
-     tablet too. */
+  header .corner,
+  .rail-right {
+    display: none;
+  }
+
+  .masthead {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .credit {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .rail-left {
+    grid-column: 1;
+    grid-row: auto;
+    flex-direction: row;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .rail-left button {
+    flex: 1;
+    min-height: 0;
+    padding: 9px 12px;
+    border-bottom: 0;
+    border-right: 1px solid var(--line);
+  }
+
+  .rail-left button:last-child {
+    border-right: 0;
+  }
+
+  .rail-left button span {
+    writing-mode: horizontal-tb;
+    transform: none;
+  }
+
+  main {
+    grid-column: 1;
+    grid-row: auto;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .board-column {
     order: -1;
-    width: min(100%, max(280px, 100dvh - 150px));
-    justify-self: center;
   }
 
-  .chess3d .board-column {
-    width: 100%;
-  }
-
-  header,
-  .app:has(> .chess3d) header,
-  .board,
-  .controls {
-    width: 100%;
+  .board {
+    margin: 16px auto;
   }
 
   .board3d {
@@ -1217,14 +1156,21 @@ main.chess3d {
     height: clamp(280px, min(100vw - 32px, 75dvh), 720px);
   }
 
+  .setup-column {
+    border-right: 0;
+    border-top: 1px solid var(--line);
+    overflow: visible;
+  }
+
+  .board-column + .side-column {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+
   /* Full width again, so all the rivals fit in one row. */
   .bot-cards.wrap {
     grid-auto-flow: column;
     grid-template-columns: none;
-  }
-
-  .setup-column {
-    overflow: visible;
   }
 
   .setup-column .history {
@@ -1248,10 +1194,10 @@ main.chess3d {
 
   .chat-input.with-hint button {
     flex: none;
+    margin-top: 0;
   }
 
-  header .credit {
-    margin-left: 0;
-    width: 100%;
+  .chat-input.with-hint input + button {
+    margin-left: -1px;
   }
 }

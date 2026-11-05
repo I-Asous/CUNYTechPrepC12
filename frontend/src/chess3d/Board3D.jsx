@@ -16,9 +16,27 @@ function fitDistance(radius, camera) {
   return radius / Math.sin(Math.atan(halfHeight * Math.min(1, camera.aspect)));
 }
 
-function cssColor(name, fallback) {
-  const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-  return new THREE.Color(value || fallback);
+// Colors come from the page's CSS tokens, so the 3D view matches the theme.
+function cssValue(name, fallback) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
+}
+
+const cssColor = (name, fallback) => new THREE.Color(cssValue(name, fallback));
+
+// Hairlines along every file and rank of one level, drawn on its top face.
+function levelGrid(files, ranks, y, material) {
+  const points = [];
+  for (let i = 0; i <= files; i++) {
+    const x = i - files / 2;
+    points.push(x, y, -ranks / 2, x, y, ranks / 2);
+  }
+  for (let j = 0; j <= ranks; j++) {
+    const z = j - ranks / 2;
+    points.push(-files / 2, y, z, files / 2, y, z);
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.Float32BufferAttribute(points, 3));
+  return new THREE.LineSegments(geometry, material);
 }
 
 // Piece symbols are drawn onto small canvases and shown as sprites, so they
@@ -36,8 +54,10 @@ function glyphTexture(type, color) {
   ctx.font = '100px "Apple Symbols", "Segoe UI Symbol", "Noto Sans Symbols 2", "Apple Color Emoji", sans-serif';
   ctx.lineJoin = "round";
   ctx.lineWidth = 8;
-  ctx.strokeStyle = color === 1 ? "#3b2d4a" : "#fff8ec";
-  ctx.fillStyle = color === 1 ? "#ffffff" : "#3b2d4a";
+  const ink = cssValue("--ink", "#d63a22");
+  const light = cssValue("--piece-light", "#ffffff");
+  ctx.strokeStyle = color === 1 ? ink : light;
+  ctx.fillStyle = color === 1 ? light : cssValue("--piece-dark", ink);
   const glyph = PIECES[type].glyph;
   if (glyph.length === 1) ctx.strokeText(glyph, 64, 70);  // chess glyphs get an outline; emoji don't need one
   ctx.fillText(glyph, 64, 70);
@@ -51,7 +71,7 @@ function labelSprite(text, color) {
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = 64;
   const ctx = canvas.getContext("2d");
-  ctx.font = '600 44px "Fredoka", sans-serif';
+  ctx.font = '400 44px "Inter Tight", "Helvetica Neue", Arial, sans-serif';
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillStyle = color;
@@ -181,12 +201,14 @@ export default function Board3D({ game, version, selected, targets, lastMove, pl
     return new THREE.Vector3(x - (game.files - 1) / 2, z * gap - height / 2, (game.ranks - 1) / 2 - y);
   };
 
-  // The glass levels: rebuilt when the variant changes.
+  // The levels, drawn like a wireframe: flat see-through tiles with hairlines
+  // between them, over a floor grid. Rebuilt when the variant changes.
   useEffect(() => {
     const { boardGroup } = three.current;
     disposeGroup(boardGroup);
-    const light = new THREE.MeshStandardMaterial({ color: cssColor("--light-square", "#fff1d2"), transparent: true, opacity: 0.62, depthWrite: false, roughness: 0.3 });
-    const dark = new THREE.MeshStandardMaterial({ color: cssColor("--dark-square", "#9dd3b4"), transparent: true, opacity: 0.62, depthWrite: false, roughness: 0.3 });
+    const tileMaterial = (color) => new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.5, depthWrite: false });
+    const light = tileMaterial(cssColor("--paper", "#ffffff"));
+    const dark = tileMaterial(cssColor("--hatch", "#f5ad9f"));
     const tileGeometry = new THREE.BoxGeometry(0.97, TILE_HEIGHT, 0.97);
     const tiles = [];
 
@@ -200,21 +222,29 @@ export default function Board3D({ game, version, selected, targets, lastMove, pl
       tiles.push(tile);
     }
 
-    const frameColor = cssColor("--frame", "#f6b38f");
-    const muted = getComputedStyle(document.documentElement).getPropertyValue("--muted").trim() || "#8a7b97";
+    const ink = cssValue("--ink", "#d63a22");
+    const hairline = new THREE.LineBasicMaterial({ color: cssColor("--line", "#ef7a66") });
     for (let z = 0; z < game.levels; z++) {
       const corner = position(game.index(0, 0, z));
       const outline = new THREE.LineSegments(
         new THREE.EdgesGeometry(new THREE.BoxGeometry(game.files, TILE_HEIGHT, game.ranks)),
-        new THREE.LineBasicMaterial({ color: frameColor }),
+        new THREE.LineBasicMaterial({ color: ink }),
       );
       outline.position.set(0, corner.y, 0);
-      boardGroup.add(outline);
+      boardGroup.add(outline, levelGrid(game.files, game.ranks, corner.y + TILE_HEIGHT / 2 + 0.002, hairline));
 
-      const label = labelSprite(game.variant.levelNames[z], muted);
+      const label = labelSprite(game.variant.levelNames[z], ink);
       label.position.set(-game.files / 2 - 0.6, corner.y, game.ranks / 2 - 0.2);
       boardGroup.add(label);
     }
+
+    // A floor grid under the lowest level, lined up with its squares, so the
+    // board sits in a drawn room.
+    const floor = new THREE.GridHelper(24, 24, cssColor("--line", "#ef7a66"), cssColor("--line", "#ef7a66"));
+    floor.material.transparent = true;
+    floor.material.opacity = 0.35;
+    floor.position.set((game.files % 2) / 2, position(game.index(0, 0, 0)).y - gap, (game.ranks % 2) / 2);
+    boardGroup.add(floor);
     three.current.tiles = tiles;
   }, [variantId]);  // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -239,25 +269,25 @@ export default function Board3D({ game, version, selected, targets, lastMove, pl
     disposeGroup(markerGroup);
     state.bobbing = null;
 
-    const accent = cssColor("--accent", "#ff7a59");
-    const grape = cssColor("--grape", "#a685ee");
-    const sunColor = cssColor("--sun", "#ffc94d");
-    const highlight = (square, color) => {
-      tiles[square].material = new THREE.MeshStandardMaterial({ color, transparent: true, opacity: 0.85, depthWrite: false });
+    const ink = cssColor("--ink", "#d63a22");
+    const highlight = (square, opacity) => {
+      tiles[square].material = new THREE.MeshBasicMaterial({ color: ink, transparent: true, opacity, depthWrite: false });
     };
     for (const tile of tiles) {
       if (tile.material !== tile.userData.base) tile.material.dispose();
       tile.material = tile.userData.base;
     }
+    // Stronger than the pale dark tiles, so the last move stands out; the
+    // selected piece's tile is solid ink.
     if (lastMove) {
-      highlight(lastMove.from, sunColor);
-      highlight(lastMove.to, sunColor);
+      highlight(lastMove.from, 0.6);
+      highlight(lastMove.to, 0.6);
     }
-    if (selected !== null) highlight(selected, grape);
+    if (selected !== null) highlight(selected, 1);
 
     const tokenGeometry = new THREE.CylinderGeometry(0.34, 0.38, 0.14, 28);
-    const whiteToken = new THREE.MeshStandardMaterial({ color: 0xfffaf2, roughness: 0.45 });
-    const blackToken = new THREE.MeshStandardMaterial({ color: 0x4a3a5c, roughness: 0.45 });
+    const whiteToken = new THREE.MeshStandardMaterial({ color: cssColor("--piece-light", "#ffffff"), roughness: 0.6 });
+    const blackToken = new THREE.MeshStandardMaterial({ color: cssColor("--piece-dark", "#d63a22"), roughness: 0.6 });
     for (let square = 0; square < game.size; square++) {
       const piece = game.cells[square];
       if (!piece) continue;
@@ -271,7 +301,7 @@ export default function Board3D({ game, version, selected, targets, lastMove, pl
       glyph.scale.set(0.8, 0.8, 0.8);
       group.add(token, glyph);
       if (game.kings[color] === square && game.inCheck(color)) {
-        const ring = new THREE.Mesh(new THREE.TorusGeometry(0.45, 0.05, 10, 32), new THREE.MeshBasicMaterial({ color: 0xff4646 }));
+        const ring = new THREE.Mesh(new THREE.TorusGeometry(0.45, 0.05, 10, 32), new THREE.MeshBasicMaterial({ color: ink }));
         ring.rotation.x = Math.PI / 2;
         ring.position.y = 0.1;
         group.add(ring);
@@ -283,8 +313,8 @@ export default function Board3D({ game, version, selected, targets, lastMove, pl
 
     for (const [square, { capture }] of targets) {
       const marker = capture
-        ? new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.05, 10, 32), new THREE.MeshBasicMaterial({ color: accent }))
-        : new THREE.Mesh(new THREE.SphereGeometry(0.15, 16, 12), new THREE.MeshBasicMaterial({ color: grape }));
+        ? new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.05, 10, 32), new THREE.MeshBasicMaterial({ color: ink }))
+        : new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.24, 0.24), new THREE.MeshBasicMaterial({ color: ink }));
       if (capture) marker.rotation.x = Math.PI / 2;
       marker.position.copy(position(square));
       marker.position.y += capture ? 0.1 : 0.2;

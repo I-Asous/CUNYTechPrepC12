@@ -126,7 +126,7 @@ export default function Chess3D() {
       <div className="side-column setup-column">
         <section className="panel setup">
           <div className="panel-header">
-            <h2><span aria-hidden="true">🧊</span> Pick a game</h2>
+            <h2>Pick a game</h2>
           </div>
 
           <h3 className="setup-label" id="setup-board">Board</h3>
@@ -194,7 +194,7 @@ export default function Chess3D() {
       <div className="side-column">
         <section className="panel coach rules">
           <div className="panel-header">
-            <h2><span aria-hidden="true">{variant.emoji}</span> How to play {variant.name}</h2>
+            <h2>How to play {variant.name}</h2>
           </div>
           <div className="rules-scroll">
             <p className="rules-tagline">{variant.tagline}. Drag to spin the board, scroll to zoom.</p>

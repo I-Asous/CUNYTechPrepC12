@@ -24,8 +24,8 @@ function pageFromUrl() {
 }
 
 const MODES = [
-  { mode: "classic", label: "♟️ Classic" },
-  { mode: "3d", label: "🧊 3D Chess" },
+  { mode: "classic", label: "Classic" },
+  { mode: "3d", label: "3D chess" },
 ];
 
 const WELCOME = {
@@ -81,30 +81,46 @@ export default function App() {
     setPage({ mode: room ? "room" : mode, room });
   }
 
+  // A frame on one grid: the header's cells sit over the columns below, the
+  // game types run down a rail on the left, and a decorative rail on the right.
   return (
     <div className="app">
       <header>
-        <h1><span className="logo" aria-hidden="true">♞</span> Chess Coach</h1>
-        <nav className="mode-tabs" aria-label="Game type">
-          {MODES.map(({ mode, label }) => (
-            <button key={mode} type="button" aria-current={page.mode === mode ? "page" : undefined}
-                    className={page.mode === mode || (mode === "classic" && page.mode === "room") ? "active" : undefined}
-                    onClick={() => goTo(mode)}>
-              {label}
-            </button>
-          ))}
-        </nav>
-        <p className="tagline">Play, practice and learn with a little help from your friends</p>
-        <p className="credit">CUNY Tech Prep · Cohort 12</p>
+        <span className="corner" aria-hidden="true" />
+        <div className="masthead">
+          <h1 className="logo">Chess Coach</h1>
+        </div>
+        <p className="statement">
+          Chess Coach is a place to play, practice and learn chess: against bots, against a friend
+          or in three dimensions, with a coach who explains every move.
+        </p>
+        <p className="credit">Built at CUNY Tech Prep, Cohort 12.</p>
+        <span className="corner" aria-hidden="true" />
       </header>
+
+      <nav className="rail rail-left" aria-label="Game type">
+        {MODES.map(({ mode, label }) => (
+          <button key={mode} type="button" aria-current={page.mode === mode ? "page" : undefined}
+                  className={page.mode === mode || (mode === "classic" && page.mode === "room") ? "active" : undefined}
+                  onClick={() => goTo(mode)}>
+            <span>{label}</span>
+          </button>
+        ))}
+      </nav>
 
       {page.mode === "room" && <OnlineGame key={page.room} code={page.room} onLeave={() => goTo("classic")} />}
       {page.mode === "classic" && <BotGame onCreateRoom={(code) => goTo("room", code)} />}
       {page.mode === "3d" && (
-        <Suspense fallback={<main className="loading-3d">Building the cube… 🧊</main>}>
+        <Suspense fallback={<main className="loading-3d">Building the cube…</main>}>
           <Chess3D />
         </Suspense>
       )}
+
+      <div className="rail rail-right" aria-hidden="true">
+        <span>play</span>
+        <span>practice</span>
+        <span>learn</span>
+      </div>
     </div>
   );
 }
