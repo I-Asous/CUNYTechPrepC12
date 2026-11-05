@@ -5,10 +5,13 @@ const REACTIONS = ["👋", "😮", "😅", "🔥", "🤝", "gg"];
 // Chat between the players (and anyone watching) in an online game.
 export default function GameChat({ messages, me, online, onSend }) {
   const [draft, setDraft] = useState("");
-  const endRef = useRef(null);
+  const listRef = useRef(null);
 
+  // Keep the newest message in view. Only the list scrolls, never the page,
+  // so the board stays put when the panels are stacked on small screens.
   useEffect(() => {
-    endRef.current?.scrollIntoView({ block: "nearest" });
+    const list = listRef.current;
+    list.scrollTop = list.scrollHeight;
   }, [messages.length]);
 
   function submit(event) {
@@ -26,7 +29,7 @@ export default function GameChat({ messages, me, online, onSend }) {
         <span className={`status-dot ${online ? "online" : "offline"}`}>{online ? "Connected" : "Reconnecting"}</span>
       </div>
 
-      <div className="messages" aria-live="polite">
+      <div className="messages" aria-live="polite" ref={listRef}>
         {messages.map((message) => {
           if (message.system) return <div key={message.id} className="message system">{message.text}</div>;
           const mine = message.pid === me;
@@ -41,7 +44,6 @@ export default function GameChat({ messages, me, online, onSend }) {
             </div>
           );
         })}
-        <div ref={endRef} />
       </div>
 
       <div className="reactions" aria-label="Quick reactions">

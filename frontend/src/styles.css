@@ -37,15 +37,16 @@
   --font-body: "Nunito", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --pop: cubic-bezier(0.34, 1.56, 0.64, 1);
 
-  /* The board is sized so the whole app fits the window: whatever height is
-     left after the header, the controls and the rival picker (--reserved),
-     and whatever width is left after the side column. */
-  --reserved: 345px;
-  --side: 380px;
-  --board: clamp(260px, min(100dvh - var(--reserved), 100vw - var(--side) - 72px), 760px);
-  /* The board's column (and the rival picker) can be wider than a short
-     window's board, so all the bots fit in one row. */
-  --column: max(var(--board), min(580px, 100vw - var(--side) - 72px));
+  /* Every game page has three columns: the board in the middle, with a side
+     column of the same width on each side so the board sits in the center.
+     The board is as big as the window allows: whatever height is left after
+     the header and the controls under the board (--reserved), and whatever
+     width is left after the side columns, the gaps and the page padding. */
+  --reserved: 155px;
+  --side: clamp(260px, 22vw, 340px);
+  --board: clamp(260px, min(100dvh - var(--reserved), 100vw - 2 * var(--side) - 84px), 820px);
+  /* The 3D board's view can be wider than it is tall, up to this. */
+  --board3d-max: 1000px;
 
   color-scheme: light;
 }
@@ -113,7 +114,7 @@ header {
   align-items: baseline;
   gap: 4px 14px;
   white-space: nowrap;
-  width: calc(var(--column) + var(--side) + 26px);
+  width: calc(2 * var(--side) + var(--board) + 44px);
   max-width: 100%;
   margin: 0 auto 12px;
 }
@@ -158,9 +159,9 @@ main {
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: var(--column) var(--side);
+  grid-template-columns: var(--side) var(--board) var(--side);
   justify-content: center;
-  gap: 26px;
+  gap: 22px;
 }
 
 /* ---------- Buttons ---------- */
@@ -168,7 +169,6 @@ main {
 /* Chunky "candy" buttons that squish when pressed. */
 .buttons button,
 .chat-input button,
-.color-choice button,
 .start,
 .bot-card {
   border: 2px solid var(--border);
@@ -184,8 +184,7 @@ main {
 
 .buttons button:hover:not(:disabled),
 .chat-input button.secondary:hover,
-.color-choice button:hover:not(:disabled),
-.bot-card:hover {
+.bot-card:hover:not(:disabled) {
   border-color: var(--accent);
   transform: translateY(-2px) rotate(-1deg);
   box-shadow: 0 5px 0 var(--border);
@@ -193,9 +192,8 @@ main {
 
 .buttons button:active:not(:disabled),
 .chat-input button:active:not(:disabled),
-.color-choice button:active:not(:disabled),
 .start:active,
-.bot-card:active {
+.bot-card:active:not(:disabled) {
   transform: translateY(2px) scale(0.97);
   box-shadow: 0 1px 0 var(--border);
 }
@@ -347,17 +345,20 @@ input:focus-visible {
   to { rotate: 360deg; }
 }
 
+/* The status and the buttons share a row; on a small board the buttons wrap
+   under the status. */
 .controls {
   width: 100%;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px 12px;
   margin-top: 16px;
 }
 
 .status {
-  flex: 1;
+  flex: 1 1 150px;
   min-width: 0;
   margin: 0;
   line-height: 1.2;
@@ -456,27 +457,66 @@ input:focus-visible {
   50% { box-shadow: 0 0 0 5px transparent; }
 }
 
-/* ---------- Opponent picker ---------- */
+/* ---------- Game setup: picking a rival, a 3D game, or inviting a friend ---------- */
 
-.offline-note {
-  font-size: 0.85rem;
-  font-weight: 700;
+/* The left column: the setup panel on top, the moves filling the rest. */
+.setup-column {
+  overflow-y: auto;
+}
+
+.setup-column .history {
+  flex: 1;
+  min-height: 130px;
+  display: flex;
+  flex-direction: column;
+}
+
+.setup-column .history-scroll {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+}
+
+.setup {
+  flex-shrink: 0;
+  padding: 14px 16px;
+}
+
+.setup .panel-header {
+  margin-bottom: 0;
+}
+
+.setup-label {
+  margin: 10px 0 6px;
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--muted);
 }
 
-/* Sits under the board, matching its width. */
-.opponent {
+.setup-description {
+  margin: 10px 0 0;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  color: var(--muted);
+}
+
+.setup-description strong {
+  color: var(--text);
+}
+
+.setup > .start {
   width: 100%;
   margin-top: 14px;
-  padding: 12px 14px;
 }
 
-.opponent .panel-header {
-  margin-bottom: 8px;
-}
-
-.opponent h2 {
-  flex-shrink: 0;
+.offline-note {
+  margin: 6px 0 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--muted);
 }
 
 /* One row of cards; scrolls sideways when there isn't room. */
@@ -495,6 +535,12 @@ input:focus-visible {
   scroll-snap-align: start;
 }
 
+/* Lots of cards in a side column: rows of three instead. */
+.bot-cards.wrap {
+  grid-auto-flow: row;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .bot-card {
   display: flex;
   flex-direction: column;
@@ -511,7 +557,7 @@ input:focus-visible {
   transition: transform 0.25s var(--pop);
 }
 
-.bot-card:hover .bot-emoji { transform: scale(1.15) rotate(-8deg); }
+.bot-card:hover:not(:disabled) .bot-emoji { transform: scale(1.15) rotate(-8deg); }
 
 .bot-card .bot-name {
   font-size: 0.78rem;
@@ -553,27 +599,8 @@ input:focus-visible {
   color: var(--text);
 }
 
-.opponent-form {
-  display: flex;
-  align-items: center;
-  white-space: nowrap;
-  justify-content: space-between;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.color-choice {
-  display: flex;
-  gap: 6px;
-}
-
-.color-choice button {
-  padding: 5px 11px;
-  font-size: 0.88rem;
-}
-
-.color-choice button.chosen {
-  background: var(--coach-bubble);
+.variant-card.chosen,
+.color-card.chosen {
   border-color: var(--grape);
   box-shadow: 0 3px 0 var(--grape);
 }
@@ -663,6 +690,7 @@ input:focus-visible {
 
 .chat-input {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin-top: 14px;
 }
@@ -685,6 +713,16 @@ input:focus-visible {
 
 .chat-input button {
   white-space: nowrap;
+}
+
+/* Coach Hoot's input has two buttons, too many for one row of a side column:
+   the input gets its own row, with Send and Hint side by side under it. */
+.chat-input.with-hint input {
+  flex-basis: 100%;
+}
+
+.chat-input.with-hint button {
+  flex: 1;
 }
 
 /* ---------- Classic / 3D tabs ---------- */
@@ -723,9 +761,11 @@ input:focus-visible {
 
 /* ---------- 3D chess ---------- */
 
+/* Fills the middle column, top to bottom (minus the controls). */
 .board3d {
   width: 100%;
-  height: var(--board);
+  flex: 1;
+  min-height: 0;
   border-radius: 18px;
   border: 8px solid var(--frame);
   box-shadow: 0 8px 0 color-mix(in srgb, var(--frame) 70%, #000), 0 18px 30px rgba(59, 45, 74, 0.25);
@@ -752,25 +792,19 @@ input:focus-visible {
   color: var(--muted);
 }
 
-.card-divider {
-  width: 2px;
-  align-self: stretch;
-  margin: 6px 2px;
-  border-radius: 2px;
-  background: var(--border);
+/* The 3D board isn't square, so its middle column can be wider than a flat
+   board's. */
+.app:has(> .chess3d) header {
+  width: calc(2 * var(--side) + var(--board3d-max) + 44px);
 }
 
-.bot-cards:has(.card-divider) {
-  grid-auto-columns: minmax(58px, 1fr);
+main.chess3d {
+  grid-template-columns: var(--side) minmax(0, var(--board3d-max)) var(--side);
 }
 
-.bot-cards .card-divider {
-  justify-self: center;
-}
-
-.variant-card.chosen {
-  border-color: var(--grape);
-  box-shadow: 0 3px 0 var(--grape);
+.chess3d .board-column {
+  align-items: stretch;
+  min-height: 0;
 }
 
 .rules-scroll {
@@ -915,11 +949,16 @@ input:focus-visible {
   flex-shrink: 0;
 }
 
+/* In the side column, the link and the copy button stack. */
+.invite .invite-link {
+  flex-direction: column;
+  margin-top: 10px;
+}
+
 .seats {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 12px;
 }
 
 .seat {
@@ -1141,22 +1180,60 @@ input:focus-visible {
 
 /* ---------- Narrow screens ---------- */
 
-/* Too small to fit everything at once: stack the panels and let the page scroll. */
-@media (max-width: 900px), (max-height: 560px) {
+/* Too narrow (or short) for three columns: stack them, board first, and let
+   the page scroll. */
+@media (max-width: 1000px), (max-height: 560px) {
   .app {
     height: auto;
     padding: 16px 16px 32px;
   }
 
-  main {
+  main,
+  main.chess3d {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  header,
-  .board,
-  .controls,
-  .opponent {
+  /* A flat board is no taller than the window, so it fits on a landscape
+     tablet too. */
+  .board-column {
+    order: -1;
+    width: min(100%, max(280px, 100dvh - 150px));
+    justify-self: center;
+  }
+
+  .chess3d .board-column {
     width: 100%;
+  }
+
+  header,
+  .app:has(> .chess3d) header,
+  .board,
+  .controls {
+    width: 100%;
+  }
+
+  .board3d {
+    flex: none;
+    height: clamp(280px, min(100vw - 32px, 75dvh), 720px);
+  }
+
+  /* Full width again, so all the rivals fit in one row. */
+  .bot-cards.wrap {
+    grid-auto-flow: column;
+    grid-template-columns: none;
+  }
+
+  .setup-column {
+    overflow: visible;
+  }
+
+  .setup-column .history {
+    flex: none;
+    min-height: 0;
+  }
+
+  .setup-column .history-scroll {
+    max-height: 240px;
   }
 
   .messages {
@@ -1164,8 +1241,13 @@ input:focus-visible {
     height: 260px;
   }
 
-  .history-scroll {
-    max-height: 240px;
+  /* Full width again: the input and both buttons fit in one row. */
+  .chat-input.with-hint input {
+    flex-basis: 0;
+  }
+
+  .chat-input.with-hint button {
+    flex: none;
   }
 
   header .credit {

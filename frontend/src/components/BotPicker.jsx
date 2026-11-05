@@ -8,9 +8,9 @@ const FRIEND = { id: "friend", emoji: "🧑‍🤝‍🧑", name: "A friend", sh
 const shortName = (bot) => bot.short ?? bot.name.split(" ").at(-1);
 
 const COLORS = [
-  { value: "w", label: "⚪ White" },
-  { value: "random", label: "🎲 Random" },
-  { value: "b", label: "⚫ Black" },
+  { value: "w", emoji: "⚪", label: "White" },
+  { value: "random", emoji: "🎲", label: "Random" },
+  { value: "b", emoji: "⚫", label: "Black" },
 ];
 
 // Choose an opponent and a color, then start a game. An empty bot id means
@@ -22,15 +22,13 @@ export default function BotPicker({ bots, opponent, onStart }) {
   const chosen = choices.find((bot) => bot.id === botId) ?? FREE_PLAY;
 
   return (
-    <section className="panel opponent">
+    <section className="panel setup">
       <div className="panel-header">
         <h2><span aria-hidden="true">🎭</span> Pick a rival</h2>
-        <p className="bot-description">
-          <strong>{chosen.emoji} {chosen.name}:</strong> {chosen.description}
-        </p>
       </div>
 
-      <div className="bot-cards" role="radiogroup" aria-label="Opponent">
+      <h3 className="setup-label" id="rival-label">Opponent</h3>
+      <div className="bot-cards wrap" role="radiogroup" aria-labelledby="rival-label">
         {choices.map((bot) => (
           <button key={bot.id || "free"} type="button" role="radio" aria-checked={bot.id === botId}
                   className={`bot-card${bot.id === botId ? " chosen" : ""}`}
@@ -41,20 +39,22 @@ export default function BotPicker({ bots, opponent, onStart }) {
           </button>
         ))}
       </div>
+      <p className="setup-description"><strong>{chosen.emoji} {chosen.name}:</strong> {chosen.description}</p>
+      {bots.length === 0 && <p className="offline-note">Bots wake up when the server runs.</p>}
 
-      <div className="opponent-form">
-        {bots.length === 0 && <span className="offline-note">Bots wake up when the server runs</span>}
-        <div className="color-choice" role="radiogroup" aria-label="Your color">
-          {COLORS.map(({ value, label }) => (
-            <button key={value} type="button" role="radio" aria-checked={color === value}
-                    className={color === value ? "chosen" : undefined}
-                    disabled={!botId} onClick={() => setColor(value)}>
-              {label}
-            </button>
-          ))}
-        </div>
-        <button type="button" className="start" onClick={() => onStart(botId, color)}>Let's play!</button>
+      <h3 className="setup-label" id="rival-color">You play</h3>
+      <div className="bot-cards" role="radiogroup" aria-labelledby="rival-color">
+        {COLORS.map(({ value, emoji, label }) => (
+          <button key={value} type="button" role="radio" aria-checked={color === value}
+                  className={`bot-card color-card${color === value ? " chosen" : ""}`}
+                  disabled={!botId} onClick={() => setColor(value)}>
+            <span className="bot-emoji" aria-hidden="true">{emoji}</span>
+            <span className="bot-name">{label}</span>
+          </button>
+        ))}
       </div>
+
+      <button type="button" className="start" onClick={() => onStart(botId, color)}>Let's play!</button>
     </section>
   );
 }

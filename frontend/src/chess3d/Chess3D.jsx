@@ -9,9 +9,9 @@ import { VARIANTS, pieceRules } from "./variants.js";
 
 const BOT_MIN_DELAY_MS = 450;
 const COLORS = [
-  { value: 1, label: "⚪ White" },
-  { value: "random", label: "🎲 Random" },
-  { value: -1, label: "⚫ Black" },
+  { value: 1, emoji: "⚪", label: "White" },
+  { value: "random", emoji: "🎲", label: "Random" },
+  { value: -1, emoji: "⚫", label: "Black" },
 ];
 
 function statusText(status, game, playerColor, bot, thinking) {
@@ -117,9 +117,62 @@ export default function Chess3D() {
 
   const variant = game.variant;
   const history = game.notation.map((san) => ({ san }));
+  const pickedBot = BOTS_3D.find((b) => b.id === pick.botId);
 
+  // Three columns: game setup and moves on the left, the board in the middle
+  // as the main focus, and the rules on the right.
   return (
-    <main>
+    <main className="chess3d">
+      <div className="side-column setup-column">
+        <section className="panel setup">
+          <div className="panel-header">
+            <h2><span aria-hidden="true">🧊</span> Pick a game</h2>
+          </div>
+
+          <h3 className="setup-label" id="setup-board">Board</h3>
+          <div className="bot-cards" role="radiogroup" aria-labelledby="setup-board">
+            {Object.values(VARIANTS).map((v) => (
+              <button key={v.id} type="button" role="radio" aria-checked={pick.variantId === v.id} aria-label={v.name}
+                      className={`bot-card variant-card${pick.variantId === v.id ? " chosen" : ""}`} title={v.tagline}
+                      onClick={() => setPick({ ...pick, variantId: v.id })}>
+                <span className="bot-emoji" aria-hidden="true">{v.emoji}</span>
+                <span className="bot-name">{v.name}</span>
+                <span className="bot-rating">{v.size.files}×{v.size.ranks}×{v.size.levels}</span>
+              </button>
+            ))}
+          </div>
+
+          <h3 className="setup-label" id="setup-bot">Opponent</h3>
+          <div className="bot-cards" role="radiogroup" aria-labelledby="setup-bot">
+            {BOTS_3D.map((b) => (
+              <button key={b.id} type="button" role="radio" aria-checked={pick.botId === b.id} aria-label={b.name}
+                      className={`bot-card${pick.botId === b.id ? " chosen" : ""}`} title={b.description}
+                      onClick={() => setPick({ ...pick, botId: b.id })}>
+                <span className="bot-emoji" aria-hidden="true">{b.emoji}</span>
+                <span className="bot-name">{b.short}</span>
+                <span className="bot-rating">{["easy", "medium", "hard"][BOTS_3D.indexOf(b)]}</span>
+              </button>
+            ))}
+          </div>
+          <p className="setup-description"><strong>{pickedBot.name}:</strong> {pickedBot.description}</p>
+
+          <h3 className="setup-label" id="setup-color">You play</h3>
+          <div className="bot-cards" role="radiogroup" aria-labelledby="setup-color">
+            {COLORS.map(({ value, emoji, label }) => (
+              <button key={value} type="button" role="radio" aria-checked={pick.color === value}
+                      className={`bot-card color-card${pick.color === value ? " chosen" : ""}`}
+                      onClick={() => setPick({ ...pick, color: value })}>
+                <span className="bot-emoji" aria-hidden="true">{emoji}</span>
+                <span className="bot-name">{label}</span>
+              </button>
+            ))}
+          </div>
+
+          <button type="button" className="start" onClick={() => startGame()}>Let's play!</button>
+        </section>
+        <MoveHistory history={history} reviewFor={() => undefined} />
+      </div>
+
       <div className="board-column">
         <Board3D game={game} version={version} selected={selected} targets={targets} lastMove={lastMove}
                  playerColor={playerColor} viewKey={viewKey} onSquareClick={handleSquareClick} />
@@ -136,48 +189,6 @@ export default function Chess3D() {
             <button onClick={() => startGame({ ...settings, color: settings.playerColor })}>New game</button>
           </div>
         </div>
-
-        <section className="panel opponent">
-          <div className="panel-header">
-            <h2><span aria-hidden="true">🧊</span> Pick a game</h2>
-            <p className="bot-description">
-              <strong>{VARIANTS[pick.variantId].name}</strong> vs <strong>{BOTS_3D.find((b) => b.id === pick.botId).name}:</strong>{" "}
-              {BOTS_3D.find((b) => b.id === pick.botId).description}
-            </p>
-          </div>
-          <div className="bot-cards">
-            {Object.values(VARIANTS).map((v) => (
-              <button key={v.id} type="button" role="radio" aria-checked={pick.variantId === v.id} aria-label={v.name}
-                      className={`bot-card variant-card${pick.variantId === v.id ? " chosen" : ""}`} title={v.tagline}
-                      onClick={() => setPick({ ...pick, variantId: v.id })}>
-                <span className="bot-emoji" aria-hidden="true">{v.emoji}</span>
-                <span className="bot-name">{v.name}</span>
-                <span className="bot-rating">{v.size.files}×{v.size.ranks}×{v.size.levels}</span>
-              </button>
-            ))}
-            <span className="card-divider" aria-hidden="true" />
-            {BOTS_3D.map((b) => (
-              <button key={b.id} type="button" role="radio" aria-checked={pick.botId === b.id} aria-label={b.name}
-                      className={`bot-card${pick.botId === b.id ? " chosen" : ""}`} title={b.description}
-                      onClick={() => setPick({ ...pick, botId: b.id })}>
-                <span className="bot-emoji" aria-hidden="true">{b.emoji}</span>
-                <span className="bot-name">{b.short}</span>
-                <span className="bot-rating">{["easy", "medium", "hard"][BOTS_3D.indexOf(b)]}</span>
-              </button>
-            ))}
-          </div>
-          <div className="opponent-form">
-            <div className="color-choice" role="radiogroup" aria-label="Your color">
-              {COLORS.map(({ value, label }) => (
-                <button key={value} type="button" role="radio" aria-checked={pick.color === value}
-                        className={pick.color === value ? "chosen" : undefined} onClick={() => setPick({ ...pick, color: value })}>
-                  {label}
-                </button>
-              ))}
-            </div>
-            <button type="button" className="start" onClick={() => startGame()}>Let's play!</button>
-          </div>
-        </section>
       </div>
 
       <div className="side-column">
@@ -200,7 +211,6 @@ export default function Chess3D() {
             </ul>
           </div>
         </section>
-        <MoveHistory history={history} reviewFor={() => undefined} />
       </div>
 
       {status.over && status.winner === playerColor && <Confetti key={version} />}

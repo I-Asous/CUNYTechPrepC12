@@ -126,6 +126,11 @@ function Room({ code, name, onLeave }) {
 
   return (
     <main>
+      <div className="side-column setup-column">
+        <InvitePanel code={code} players={players} you={you} watchers={state?.watchers ?? 0} />
+        <MoveHistory history={history} reviewFor={() => undefined} />
+      </div>
+
       <div className="board-column">
         <Board board={game.board()} flipped={isFlipped} selected={selected} targets={targets}
                lastMove={history.at(-1) ?? null} checkSquare={kingInCheckSquare(game)} onSquareClick={handleSquareClick} />
@@ -141,13 +146,11 @@ function Room({ code, name, onLeave }) {
             <button onClick={onLeave}>Leave</button>
           </div>
         </div>
-        <InvitePanel code={code} players={players} you={you} watchers={state?.watchers ?? 0} />
       </div>
 
       <div className="side-column">
         <GameChat messages={state?.chat ?? []} me={you?.pid} online={connection === "open"}
                   onSend={(text) => send({ type: "chat", text })} />
-        <MoveHistory history={history} reviewFor={() => undefined} />
       </div>
 
       {won && <Confetti key={moveList} />}

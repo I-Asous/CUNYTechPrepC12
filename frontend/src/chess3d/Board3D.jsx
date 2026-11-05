@@ -9,6 +9,13 @@ const LEVEL_GAP = { raumschach: 1.8, skyscraper: 2.4 };
 const TILE_HEIGHT = 0.05;
 const CLICK_SLOP_PX = 6;  // a drag shorter than this still counts as a click
 
+// How far back the camera must be for a sphere of this radius to fit in view,
+// using whichever of the view's height or width is tighter.
+function fitDistance(radius, camera) {
+  const halfHeight = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+  return radius / Math.sin(Math.atan(halfHeight * Math.min(1, camera.aspect)));
+}
+
 function cssColor(name, fallback) {
   const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
   return new THREE.Color(value || fallback);
@@ -85,7 +92,7 @@ export default function Board3D({ game, version, selected, targets, lastMove, pl
     controls.enableDamping = true;
     controls.enablePan = false;
     controls.minDistance = 5;
-    controls.maxDistance = 30;
+    controls.maxDistance = 45;
 
     scene.add(new THREE.HemisphereLight(0xffffff, 0xd9c7ff, 2.2));
     const sun = new THREE.DirectionalLight(0xffffff, 1.6);
@@ -104,8 +111,12 @@ export default function Board3D({ game, version, selected, targets, lastMove, pl
       const { clientWidth: w, clientHeight: h } = mount;
       if (!w || !h) return;
       renderer.setSize(w, h);
+      const before = fitDistance(1, camera);
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
+      // Move the camera in or out with the view's shape, so a narrower view
+      // doesn't crop the board.
+      camera.position.sub(controls.target).multiplyScalar(fitDistance(1, camera) / before).add(controls.target);
     };
     const observer = new ResizeObserver(resize);
     observer.observe(mount);
@@ -212,7 +223,7 @@ export default function Board3D({ game, version, selected, targets, lastMove, pl
   useEffect(() => {
     const { camera, controls } = three.current;
     const radius = Math.hypot(game.files / 2, game.ranks / 2, ((game.levels - 1) * gap) / 2 + 0.6);
-    const distance = radius / Math.sin(THREE.MathUtils.degToRad(camera.fov / 2));
+    const distance = fitDistance(radius, camera);
     const elevation = THREE.MathUtils.degToRad(30);
     const side = playerColor === -1 ? -1 : 1;
     camera.position.set(0, distance * Math.sin(elevation), distance * Math.cos(elevation) * side);

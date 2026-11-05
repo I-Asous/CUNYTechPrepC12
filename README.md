@@ -17,36 +17,36 @@ The bot's decisions and explanations will draw on chess datasets such as game da
 
 ## Group Members
 
-| Name | Role |
-| --- | --- |
-| Argurjana (Ari) Olloni | Group Manager |
-| Ludwin Tenezaca | Member |
-| Islam Asous | Member |
-| Maisha Tasnim Chowdhury | Member |
+| Name                    | Role          |
+| ----------------------- | ------------- |
+| Argurjana (Ari) Olloni  | Group Manager |
+| Ludwin Tenezaca         | Member        |
+| Islam Asous             | Member        |
+| Maisha Tasnim Chowdhury | Member        |
 
 ## Tech Stack
 
 **Frontend** (`frontend/`)
 
-| Tool | Used for |
-| --- | --- |
-| [React](https://react.dev/) 19 | The website's UI |
-| [Vite](https://vite.dev/) 8 | Dev server and build; forwards `/api` requests (including WebSockets) to the backend |
-| [chess.js](https://github.com/jhlywa/chess.js) | Move rules for the classic board in the browser |
-| [Three.js](https://threejs.org/) 0.186 | The rotatable 3D board |
-| Web Workers | Run the 3D chess bot off the main thread |
-| Google Fonts (Fredoka, Nunito) | Typography |
+| Tool                                          | Used for                                                                               |
+| --------------------------------------------- | -------------------------------------------------------------------------------------- |
+| [React](https://react.dev/) 19                 | The website's UI                                                                       |
+| [Vite](https://vite.dev/) 8                    | Dev server and build; forwards `/api` requests (including WebSockets) to the backend |
+| [chess.js](https://github.com/jhlywa/chess.js) | Move rules for the classic board in the browser                                        |
+| [Three.js](https://threejs.org/) 0.186         | The rotatable 3D board                                                                 |
+| Web Workers                                   | Run the 3D chess bot off the main thread                                               |
+| Google Fonts (Fredoka, Nunito)                | Typography                                                                             |
 
 **Backend** (`backend/`)
 
-| Tool | Used for |
-| --- | --- |
-| Python 3 + [FastAPI](https://fastapi.tiangolo.com/) | The coaching API and online game rooms |
-| [Uvicorn](https://www.uvicorn.org/) | Runs the API server, including WebSockets for online games and chat |
-| [python-chess](https://python-chess.readthedocs.io/) | Move rules, board analysis and talking to Stockfish |
-| [Stockfish](https://stockfishchess.org/) | Chess engine behind move grading, hints and the classic bots |
-| SQLite | Local copy of the chess datasets |
-| [zstandard](https://github.com/indygreg/python-zstandard) | Reading the compressed Lichess data files |
+| Tool                                                     | Used for                                                            |
+| -------------------------------------------------------- | ------------------------------------------------------------------- |
+| Python 3 + [FastAPI](https://fastapi.tiangolo.com/)       | The coaching API and online game rooms                              |
+| [Uvicorn](https://www.uvicorn.org/)                       | Runs the API server, including WebSockets for online games and chat |
+| [python-chess](https://python-chess.readthedocs.io/)      | Move rules, board analysis and talking to Stockfish                 |
+| [Stockfish](https://stockfishchess.org/)                  | Chess engine behind move grading, hints and the classic bots        |
+| SQLite                                                   | Local copy of the chess datasets                                    |
+| [zstandard](https://github.com/indygreg/python-zstandard) | Reading the compressed Lichess data files                           |
 
 **Data:** the Lichess [opening names](https://github.com/lichess-org/chess-openings), [puzzle database](https://database.lichess.org/#puzzles), [evaluations database](https://database.lichess.org/#evals) and [masters explorer API](https://lichess.org/api#tag/Opening-Explorer). See [Datasets](#datasets).
 
@@ -99,15 +99,15 @@ uvicorn app.main:app --reload --port 8000
 
 Pick an opponent and a color in the Opponent panel, then press Start game. The coach reviews your moves, not the bot's. Undo takes back your last move and the bot's reply.
 
-| Bot | Rating (rough) | How it plays |
-| --- | --- | --- |
-| Penny | ~400 | Random moves, grabs captures |
-| Rookie Ray | ~800 | Picks from Stockfish's top 8 moves, often not the best |
-| Casual Cal | ~1100 | Picks from Stockfish's top 5, usually a good one |
-| Club Player Clara | ~1500 | Stockfish limited to 1500 Elo |
-| Bookworm Bea | ~1800 | Follows opening theory from the openings dataset, then Stockfish at 1800 Elo |
-| Master Max | ~2200 | Stockfish limited to 2200 Elo |
-| Stockfish | ~3200 | Full strength |
+| Bot               | Rating (rough) | How it plays                                                                 |
+| ----------------- | -------------- | ---------------------------------------------------------------------------- |
+| Penny             | ~400           | Random moves, grabs captures                                                 |
+| Rookie Ray        | ~800           | Picks from Stockfish's top 8 moves, often not the best                       |
+| Casual Cal        | ~1100          | Picks from Stockfish's top 5, usually a good one                             |
+| Club Player Clara | ~1500          | Stockfish limited to 1500 Elo                                                |
+| Bookworm Bea      | ~1800          | Follows opening theory from the openings dataset, then Stockfish at 1800 Elo |
+| Master Max        | ~2200          | Stockfish limited to 2200 Elo                                                |
+| Stockfish         | ~3200          | Full strength                                                                |
 
 Bots are defined in `backend/app/bots.py`. Stockfish can't play below about 1320 Elo, so the weakest bots choose randomly among its top moves instead.
 
@@ -115,10 +115,10 @@ Bots are defined in `backend/app/bots.py`. Stockfish can't play below about 1320
 
 The **🧊 3D Chess** tab has two three-dimensional variants, played against a bot in a rotatable 3D view (drag to spin, scroll to zoom). The "How to play" panel explains how each piece moves.
 
-| Variant | Board | About |
-| --- | --- | --- |
+| Variant    | Board   | About                                                                                                              |
+| ---------- | ------- | ------------------------------------------------------------------------------------------------------------------ |
 | Raumschach | 5×5×5 | The classic space chess by Ferdinand Maack (1907). Adds the Unicorn, which moves through the corners of the cubes. |
-| Skyscraper | 8×8×3 | Our own variant: the normal chess army on three stacked boards, White on the bottom and Black on the top. |
+| Skyscraper | 8×8×3 | Our own variant: the normal chess army on three stacked boards, White on the bottom and Black on the top.          |
 
 Raumschach's pawn rules have several historical versions. We use the commonly played one: pawns move one step forward or one level toward the enemy, capture one step diagonally in those directions, and promote on the far corner row (E5 for White, A1 for Black). Neither variant has castling or en passant.
 
@@ -138,12 +138,12 @@ Pick the **Friend** card, choose your color and press Let's play. You get a link
 
 The coach's feedback draws on these sources. `python -m app.data.build` loads them into `backend/data/chess_data.sqlite`, which is about 1 GB and isn't committed.
 
-| Dataset | Source | What the coach uses it for |
-| --- | --- | --- |
-| Openings | [lichess-org/chess-openings](https://github.com/lichess-org/chess-openings) | Naming the opening and telling when a player leaves known theory |
-| Puzzles | [Lichess puzzle database](https://database.lichess.org/#puzzles) | Spotting tactics (forks, pins, hanging pieces) and explaining them in plain language |
-| Evaluations | [Lichess evaluations database](https://database.lichess.org/#evals) | Precomputed Stockfish analysis for common early-game positions |
-| Masters | [Lichess masters explorer](https://lichess.org/api#tag/Opening-Explorer) | How often strong players chose each move |
+| Dataset     | Source                                                                     | What the coach uses it for                                                           |
+| ----------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Openings    | [lichess-org/chess-openings](https://github.com/lichess-org/chess-openings) | Naming the opening and telling when a player leaves known theory                     |
+| Puzzles     | [Lichess puzzle database](https://database.lichess.org/#puzzles)            | Spotting tactics (forks, pins, hanging pieces) and explaining them in plain language |
+| Evaluations | [Lichess evaluations database](https://database.lichess.org/#evals)         | Precomputed Stockfish analysis for common early-game positions                       |
+| Masters     | [Lichess masters explorer](https://lichess.org/api#tag/Opening-Explorer)    | How often strong players chose each move                                             |
 
 The full puzzle and evaluation files are large, so the build keeps a subset: puzzles with at least 80 popularity and 1,000 plays, and evaluations for positions with 26 or more pieces taken from the first 5 million records. `python -m app.data.build --help` lists the options for keeping more.
 
@@ -151,12 +151,12 @@ The masters explorer needs a free Lichess API token. Create one at https://liche
 
 ## Controls
 
-| Input | Action |
-| --- | --- |
+| Input                        | Action         |
+| ---------------------------- | -------------- |
 | Click a piece, then a square | Move the piece |
-| `U` | Undo |
-| `R` | Reset |
-| `F` | Flip board |
+| `U`                        | Undo           |
+| `R`                        | Reset          |
+| `F`                        | Flip board     |
 
 ## Project Structure
 

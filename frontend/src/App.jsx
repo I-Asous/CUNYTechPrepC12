@@ -290,9 +290,16 @@ function BotGame({ onCreateRoom }) {
 
   const reviewFor = (ply) => history[ply] && reviews[`${ply}|${history[ply].after}`];
 
+  // Three columns: picking a rival and the moves on the left, the board in
+  // the middle as the main focus, and Coach Hoot on the right.
   return (
     <>
       <main>
+        <div className="side-column setup-column">
+          <BotPicker bots={bots} opponent={opponent} onStart={startGame} />
+          <MoveHistory history={history} reviewFor={reviewFor} />
+        </div>
+
         <div className="board-column">
           <Board board={game.board()} flipped={flipped} selected={selected} targets={targets}
                  lastMove={lastMove} checkSquare={kingInCheckSquare(game)} onSquareClick={handleSquareClick} />
@@ -309,12 +316,10 @@ function BotGame({ onCreateRoom }) {
               <button onClick={() => newGame()}>New game</button>
             </div>
           </div>
-          <BotPicker bots={bots} opponent={opponent} onStart={startGame} />
         </div>
 
         <div className="side-column">
           <CoachChat messages={messages} online={online} busy={busy} onSend={sendMessage} onHint={requestHint} />
-          <MoveHistory history={history} reviewFor={reviewFor} />
         </div>
       </main>
 
