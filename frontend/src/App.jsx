@@ -24,14 +24,14 @@ function pageFromUrl() {
 }
 
 const MODES = [
-  { mode: "classic", label: "♟️ Classic" },
-  { mode: "3d", label: "🧊 3D Chess" },
+  { mode: "classic", label: "Classic" },
+  { mode: "3d", label: "3D chess" },
 ];
 
 const WELCOME = {
   id: 0,
   from: "coach",
-  text: "Hoo-hoo! I'm Hoot, your coach. Make a move and I'll tell you how it went. Pick up a " +
+  text: "Hi! I'm Rook, your coach. Make a move and I'll tell you how it went. Pick up a " +
         "piece and I'll tell you if it's the right one. Stuck? Press Hint!",
 };
 const OFFLINE_TEXT = "I'm napping right now (I can't reach the coaching server), so no feedback " +
@@ -81,35 +81,51 @@ export default function App() {
     setPage({ mode: room ? "room" : mode, room });
   }
 
+  // A frame on one grid: the header's cells sit over the columns below, the
+  // game types run down a rail on the left, and a decorative rail on the right.
   return (
     <div className="app">
       <header>
-        <h1><span className="logo" aria-hidden="true">♞</span> Chess Coach</h1>
-        <nav className="mode-tabs" aria-label="Game type">
-          {MODES.map(({ mode, label }) => (
-            <button key={mode} type="button" aria-current={page.mode === mode ? "page" : undefined}
-                    className={page.mode === mode || (mode === "classic" && page.mode === "room") ? "active" : undefined}
-                    onClick={() => goTo(mode)}>
-              {label}
-            </button>
-          ))}
-        </nav>
-        <p className="tagline">Play, practice and learn with a little help from your friends</p>
-        <p className="credit">CUNY Tech Prep · Cohort 12</p>
+        <span className="corner" aria-hidden="true" />
+        <div className="masthead">
+          <h1 className="logo">Chess Coach</h1>
+        </div>
+        <p className="statement">
+          Chess Coach is a place to play, practice and learn chess: against bots, against a friend
+          or in three dimensions, with a coach who explains every move.
+        </p>
+        <p className="credit">Built at CUNY Tech Prep, Cohort 12.</p>
+        <span className="corner" aria-hidden="true" />
       </header>
+
+      <nav className="rail rail-left" aria-label="Game type">
+        {MODES.map(({ mode, label }) => (
+          <button key={mode} type="button" aria-current={page.mode === mode ? "page" : undefined}
+                  className={page.mode === mode || (mode === "classic" && page.mode === "room") ? "active" : undefined}
+                  onClick={() => goTo(mode)}>
+            <span>{label}</span>
+          </button>
+        ))}
+      </nav>
 
       {page.mode === "room" && <OnlineGame key={page.room} code={page.room} onLeave={() => goTo("classic")} />}
       {page.mode === "classic" && <BotGame onCreateRoom={(code) => goTo("room", code)} />}
       {page.mode === "3d" && (
-        <Suspense fallback={<main className="loading-3d">Building the cube… 🧊</main>}>
+        <Suspense fallback={<main className="loading-3d">Building the cube…</main>}>
           <Chess3D />
         </Suspense>
       )}
+
+      <div className="rail rail-right" aria-hidden="true">
+        <span>play</span>
+        <span>practice</span>
+        <span>learn</span>
+      </div>
     </div>
   );
 }
 
-// Playing alone: against a bot or both sides, with Coach Hoot's feedback.
+// Playing alone: against a bot or both sides, with Coach Rook's feedback.
 function BotGame({ onCreateRoom }) {
   const [game] = useState(() => new Chess());
   const [fen, setFen] = useState(() => game.fen());   // bumps a re-render after every change to `game`
@@ -290,9 +306,16 @@ function BotGame({ onCreateRoom }) {
 
   const reviewFor = (ply) => history[ply] && reviews[`${ply}|${history[ply].after}`];
 
+  // Three columns: picking a rival and the moves on the left, the board in
+  // the middle as the main focus, and Coach Rook on the right.
   return (
     <>
       <main>
+        <div className="side-column setup-column">
+          <BotPicker bots={bots} opponent={opponent} onStart={startGame} />
+          <MoveHistory history={history} reviewFor={reviewFor} />
+        </div>
+
         <div className="board-column">
           <Board board={game.board()} flipped={flipped} selected={selected} targets={targets}
                  lastMove={lastMove} checkSquare={kingInCheckSquare(game)} onSquareClick={handleSquareClick} />
@@ -309,12 +332,10 @@ function BotGame({ onCreateRoom }) {
               <button onClick={() => newGame()}>New game</button>
             </div>
           </div>
-          <BotPicker bots={bots} opponent={opponent} onStart={startGame} />
         </div>
 
         <div className="side-column">
           <CoachChat messages={messages} online={online} busy={busy} onSend={sendMessage} onHint={requestHint} />
-          <MoveHistory history={history} reviewFor={reviewFor} />
         </div>
       </main>
 

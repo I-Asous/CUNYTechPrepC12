@@ -5,10 +5,13 @@ const STICKERS = { best: "🌟", good: "👍", inaccuracy: "🤔", mistake: "�
 
 export default function CoachChat({ messages, online, busy, onSend, onHint }) {
   const [draft, setDraft] = useState("");
-  const endRef = useRef(null);
+  const listRef = useRef(null);
 
+  // Keep the newest message in view. Only the list scrolls, never the page,
+  // so the board stays put when the panels are stacked on small screens.
   useEffect(() => {
-    endRef.current?.scrollIntoView({ block: "nearest" });
+    const list = listRef.current;
+    list.scrollTop = list.scrollHeight;
   }, [messages]);
 
   function submit(event) {
@@ -22,11 +25,11 @@ export default function CoachChat({ messages, online, busy, onSend, onHint }) {
   return (
     <section className="panel coach">
       <div className="panel-header">
-        <h2><span aria-hidden="true">🦉</span> Coach Hoot</h2>
+        <h2>Coach Rook</h2>
         <span className={`status-dot ${online ? "online" : "offline"}`}>{online ? "Awake" : "Napping"}</span>
       </div>
 
-      <div className="messages" aria-live="polite">
+      <div className="messages" aria-live="polite" ref={listRef}>
         {messages.map((message) => (
           <div key={message.id} className={`message ${message.from} ${message.quality ?? ""}`}>
             {STICKERS[message.quality] && (
@@ -40,12 +43,11 @@ export default function CoachChat({ messages, online, busy, onSend, onHint }) {
             <span /><span /><span />
           </div>
         )}
-        <div ref={endRef} />
       </div>
 
-      <form className="chat-input" onSubmit={submit}>
+      <form className="chat-input with-hint" onSubmit={submit}>
         <input value={draft} onChange={(e) => setDraft(e.target.value)}
-               placeholder="Ask Hoot anything about this position…" aria-label="Message the coach" />
+               placeholder="Ask Rook anything about this position…" aria-label="Message the coach" />
         <button type="submit" disabled={!draft.trim()}>Send</button>
         <button type="button" className="secondary" onClick={onHint}>💡 Hint</button>
       </form>

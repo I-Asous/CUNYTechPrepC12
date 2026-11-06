@@ -15,9 +15,11 @@ function MoveCell({ move, review, isLast }) {
 }
 
 export default function MoveHistory({ history, reviewFor }) {
-  const endRef = useRef(null);
+  const listRef = useRef(null);
+  // Keep the latest move in view, scrolling only the list (never the page).
   useEffect(() => {
-    endRef.current?.scrollIntoView({ block: "nearest" });
+    const list = listRef.current;
+    if (list) list.scrollTop = list.scrollHeight;
   }, [history.length]);
 
   const rows = [];
@@ -27,11 +29,11 @@ export default function MoveHistory({ history, reviewFor }) {
 
   return (
     <section className="panel history">
-      <h2><span aria-hidden="true">📜</span> The story so far</h2>
+      <h2>The story so far</h2>
       {history.length === 0 ? (
         <p className="empty">Once upon a time, nobody had moved yet…</p>
       ) : (
-        <div className="history-scroll">
+        <div className="history-scroll" ref={listRef}>
           <table>
             <tbody>
               {rows.map(({ number, white, black }) => (
@@ -43,7 +45,6 @@ export default function MoveHistory({ history, reviewFor }) {
               ))}
             </tbody>
           </table>
-          <div ref={endRef} />
         </div>
       )}
     </section>

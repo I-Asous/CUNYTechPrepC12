@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 
-const COLORS = ["var(--accent)", "var(--sun)", "var(--mint)", "var(--sky)", "var(--grape)"];
+const COLORS = ["var(--ink)", "var(--line)", "var(--hatch)"];
 const PIECES = 60;
 
 // A one-off burst of falling confetti. Mount it to celebrate; it's hidden

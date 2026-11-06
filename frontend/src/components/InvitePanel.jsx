@@ -5,7 +5,7 @@ const SEATS = [
   { color: "b", icon: "⚫" },
 ];
 
-// Who's in the online game, plus the link to invite someone. Sits under the
+// Who's in the online game, plus the link to invite someone. Sits left of the
 // board where the rival picker is in bot games.
 export default function InvitePanel({ code, players, you, watchers }) {
   const [copied, setCopied] = useState(false);
@@ -22,17 +22,18 @@ export default function InvitePanel({ code, players, you, watchers }) {
   }
 
   return (
-    <section className="panel opponent invite">
+    <section className="panel setup invite">
       <div className="panel-header">
-        <h2><span aria-hidden="true">🔗</span> Invite a friend</h2>
-        <p className="bot-description">Send them this link, or the code <strong>{code}</strong></p>
+        <h2>Invite a friend</h2>
       </div>
+      <p className="setup-description">Send them this link, or the code <strong>{code}</strong></p>
 
       <div className="invite-link">
         <input readOnly value={link} aria-label="Invite link" onFocus={(e) => e.target.select()} />
         <button type="button" className="start" onClick={copy}>{copied ? "Copied! ✨" : "Copy link"}</button>
       </div>
 
+      <h3 className="setup-label">Players</h3>
       <div className="seats">
         {SEATS.map(({ color, icon }) => {
           const player = players[color];
