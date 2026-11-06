@@ -122,7 +122,7 @@ The **🧊 3D Chess** tab has two three-dimensional variants, played against a b
 
 Raumschach's pawn rules have several historical versions. We use the commonly played one: pawns move one step forward or one level toward the enemy, capture one step diagonally in those directions, and promote on the far corner row (E5 for White, A1 for Black). Neither variant has castling or en passant.
 
-Stockfish only plays normal chess, so the 3D variants have their own rules engine and bot in `frontend/src/chess3d/`. The bot searches a few moves ahead in a Web Worker so the page stays smooth. There are three levels: Shelly 🐌 (easy), Otto 🐙 (medium) and Zorp 🛸 (hard). Coach Hoot doesn't cover 3D games.
+Stockfish only plays normal chess, so the 3D variants have their own rules engine and bot in `frontend/src/chess3d/`. The bot searches a few moves ahead in a Web Worker so the page stays smooth. There are three levels: Shelly 🐌 (easy), Otto 🐙 (medium) and Zorp 🛸 (hard). Coach Rook doesn't cover 3D games.
 
 ## Playing a Friend Online
 
@@ -131,7 +131,7 @@ Pick the **Friend** card, choose your color and press Let's play. You get a link
 - The server checks every move, so the game can't be cheated by editing the page.
 - Refreshing the page reconnects you to your seat.
 - After the game, either player can start a rematch with colors swapped.
-- Coach Hoot sits out games against people, so there are no hints mid-game.
+- Coach Rook sits out games against people, so there are no hints mid-game.
 - Games live in the backend's memory, so they disappear when it restarts. There are no accounts yet; players just pick a display name.
 
 ## Datasets

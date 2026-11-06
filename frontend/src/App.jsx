@@ -31,7 +31,7 @@ const MODES = [
 const WELCOME = {
   id: 0,
   from: "coach",
-  text: "Hoo-hoo! I'm Hoot, your coach. Make a move and I'll tell you how it went. Pick up a " +
+  text: "Hi! I'm Rook, your coach. Make a move and I'll tell you how it went. Pick up a " +
         "piece and I'll tell you if it's the right one. Stuck? Press Hint!",
 };
 const OFFLINE_TEXT = "I'm napping right now (I can't reach the coaching server), so no feedback " +
@@ -125,7 +125,7 @@ export default function App() {
   );
 }
 
-// Playing alone: against a bot or both sides, with Coach Hoot's feedback.
+// Playing alone: against a bot or both sides, with Coach Rook's feedback.
 function BotGame({ onCreateRoom }) {
   const [game] = useState(() => new Chess());
   const [fen, setFen] = useState(() => game.fen());   // bumps a re-render after every change to `game`
@@ -307,7 +307,7 @@ function BotGame({ onCreateRoom }) {
   const reviewFor = (ply) => history[ply] && reviews[`${ply}|${history[ply].after}`];
 
   // Three columns: picking a rival and the moves on the left, the board in
-  // the middle as the main focus, and Coach Hoot on the right.
+  // the middle as the main focus, and Coach Rook on the right.
   return (
     <>
       <main>

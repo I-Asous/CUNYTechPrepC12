@@ -25,7 +25,7 @@ export default function CoachChat({ messages, online, busy, onSend, onHint }) {
   return (
     <section className="panel coach">
       <div className="panel-header">
-        <h2>Coach Hoot</h2>
+        <h2>Coach Rook</h2>
         <span className={`status-dot ${online ? "online" : "offline"}`}>{online ? "Awake" : "Napping"}</span>
       </div>
 
@@ -47,7 +47,7 @@ export default function CoachChat({ messages, online, busy, onSend, onHint }) {
 
       <form className="chat-input with-hint" onSubmit={submit}>
         <input value={draft} onChange={(e) => setDraft(e.target.value)}
-               placeholder="Ask Hoot anything about this position…" aria-label="Message the coach" />
+               placeholder="Ask Rook anything about this position…" aria-label="Message the coach" />
         <button type="submit" disabled={!draft.trim()}>Send</button>
         <button type="button" className="secondary" onClick={onHint}>💡 Hint</button>
       </form>

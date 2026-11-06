@@ -607,7 +607,7 @@ main {
   font-weight: 300;
 }
 
-/* ---------- Chat: Coach Hoot and online games ---------- */
+/* ---------- Chat: Coach Rook and online games ---------- */
 
 .messages {
   flex: 1;
@@ -723,7 +723,7 @@ main {
   white-space: nowrap;
 }
 
-/* Coach Hoot's input has two buttons, too many for one row of a side column:
+/* Coach Rook's input has two buttons, too many for one row of a side column:
    the input gets its own row, with Send and Hint side by side under it. */
 .chat-input.with-hint input {
   flex-basis: 100%;
