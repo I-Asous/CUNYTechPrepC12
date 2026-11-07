@@ -1,11 +1,12 @@
 import { useState } from "react";
+import Avatar from "./Avatar.jsx";
 
-const FREE_PLAY = { id: "", emoji: "🎲", name: "Just me", short: "Just me", description: "No bot. You play both sides." };
-const FRIEND = { id: "friend", emoji: "🧑‍🤝‍🧑", name: "A friend", short: "Friend", rating: null,
+const FREE_PLAY = { id: "", name: "Just me", short: "Just me", description: "No bot. You play both sides." };
+const FRIEND = { id: "friend", name: "A friend", short: "Friend", rating: null,
                  description: "Play someone online and chat mid-game. You'll get a link to send them." };
 
-// "Club Player Clara" -> "Clara", to keep the cards small.
-const shortName = (bot) => bot.short ?? bot.name.split(" ").at(-1);
+// "Grub the Goblin" -> "Grub", to keep the cards small.
+const shortName = (bot) => bot.short ?? bot.name.split(" ")[0];
 
 const COLORS = [
   { value: "w", emoji: "⚪", label: "White" },
@@ -33,13 +34,13 @@ export default function BotPicker({ bots, opponent, onStart }) {
           <button key={bot.id || "free"} type="button" role="radio" aria-checked={bot.id === botId}
                   className={`bot-card${bot.id === botId ? " chosen" : ""}`}
                   onClick={() => setBotId(bot.id)} title={`${bot.name}: ${bot.description}`} aria-label={bot.name}>
-            <span className="bot-emoji" aria-hidden="true">{bot.emoji}</span>
+            <Avatar id={bot.id || "free"} />
             <span className="bot-name">{shortName(bot)}</span>
             <span className="bot-rating">{bot.rating ? `~${bot.rating}` : bot.id ? "online" : "free play"}</span>
           </button>
         ))}
       </div>
-      <p className="setup-description"><strong>{chosen.emoji} {chosen.name}:</strong> {chosen.description}</p>
+      <p className="setup-description"><strong>{chosen.name}:</strong> {chosen.description}</p>
       {bots.length === 0 && <p className="offline-note">Bots wake up when the server runs.</p>}
 
       <h3 className="setup-label" id="rival-color">You play</h3>

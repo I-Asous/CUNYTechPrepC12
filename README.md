@@ -99,17 +99,17 @@ uvicorn app.main:app --reload --port 8000
 
 Pick an opponent and a color in the Opponent panel, then press Start game. The coach reviews your moves, not the bot's. Undo takes back your last move and the bot's reply.
 
-| Bot               | Rating (rough) | How it plays                                                                 |
-| ----------------- | -------------- | ---------------------------------------------------------------------------- |
-| Penny             | ~400           | Random moves, grabs captures                                                 |
-| Rookie Ray        | ~800           | Picks from Stockfish's top 8 moves, often not the best                       |
-| Casual Cal        | ~1100          | Picks from Stockfish's top 5, usually a good one                             |
-| Club Player Clara | ~1500          | Stockfish limited to 1500 Elo                                                |
-| Bookworm Bea      | ~1800          | Follows opening theory from the openings dataset, then Stockfish at 1800 Elo |
-| Master Max        | ~2200          | Stockfish limited to 2200 Elo                                                |
-| Stockfish         | ~3200          | Full strength                                                                |
+| Bot                  | Rating (rough) | How it plays                                                                 |
+| -------------------- | -------------- | ---------------------------------------------------------------------------- |
+| Grub the Goblin      | ~400           | Random moves, grabs captures                                                 |
+| Pip the Squire       | ~800           | Picks from Stockfish's top 8 moves, often not the best                       |
+| Barnaby the Bard     | ~1100          | Picks from Stockfish's top 5, usually a good one                             |
+| Elowen the Elf       | ~1500          | Stockfish limited to 1500 Elo                                                |
+| Ambrose the Monk     | ~1800          | Follows opening theory from the openings dataset, then Stockfish at 1800 Elo |
+| Morwen the Sorceress | ~2200          | Stockfish limited to 2200 Elo                                                |
+| Ignis the Dragon     | ~3200          | Stockfish at full strength                                                   |
 
-Bots are defined in `backend/app/bots.py`. Stockfish can't play below about 1320 Elo, so the weakest bots choose randomly among its top moves instead.
+Bots are defined in `backend/app/bots.py`, and their portraits are drawn in `frontend/src/components/Avatar.jsx`, keyed by bot id. Stockfish can't play below about 1320 Elo, so the weakest bots choose randomly among its top moves instead.
 
 ## 3D Chess
 
@@ -122,7 +122,7 @@ The **🧊 3D Chess** tab has two three-dimensional variants, played against a b
 
 Raumschach's pawn rules have several historical versions. We use the commonly played one: pawns move one step forward or one level toward the enemy, capture one step diagonally in those directions, and promote on the far corner row (E5 for White, A1 for Black). Neither variant has castling or en passant.
 
-Stockfish only plays normal chess, so the 3D variants have their own rules engine and bot in `frontend/src/chess3d/`. The bot searches a few moves ahead in a Web Worker so the page stays smooth. There are three levels: Shelly 🐌 (easy), Otto 🐙 (medium) and Zorp 🛸 (hard). Coach Rook doesn't cover 3D games.
+Stockfish only plays normal chess, so the 3D variants have their own rules engine and bot in `frontend/src/chess3d/`. The bot searches a few moves ahead in a Web Worker so the page stays smooth. There are three levels: Flick the Fairy (easy), Zephyr the Genie (medium) and Nefer the Sphinx (hard). Coach Rook doesn't cover 3D games.
 
 ## Playing a Friend Online
 

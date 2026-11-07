@@ -17,24 +17,24 @@ from app import engine
 from app.data import openings
 
 BOTS = [
-    {"id": "penny", "emoji": "🐣", "name": "Penny", "rating": 400, "style": "random",
-     "description": "Just hatched! Thinks every piece is a snack."},
-    {"id": "ray", "emoji": "🦝", "name": "Rookie Ray", "rating": 800, "style": "sloppy", "lines": 8, "temperature": 150,
-     "description": "Rummages for loot and forgets to guard his own stuff."},
-    {"id": "cal", "emoji": "🐢", "name": "Casual Cal", "rating": 1100, "style": "sloppy", "lines": 5, "temperature": 60,
-     "description": "Slow and steady, with the occasional wobble."},
-    {"id": "clara", "emoji": "🦊", "name": "Club Player Clara", "rating": 1500, "style": "limited", "elo": 1500,
-     "description": "Sly and solid. Pounces on loose pieces."},
-    {"id": "bea", "emoji": "🐛", "name": "Bookworm Bea", "rating": 1800, "style": "book", "elo": 1800,
-     "description": "Has memorized every opening book in the library."},
-    {"id": "max", "emoji": "🧙", "name": "Master Max", "rating": 2200, "style": "limited", "elo": 2200,
-     "description": "Sees five moves ahead. Possibly magic."},
-    {"id": "stockfish", "emoji": "🐟", "name": "Stockfish", "rating": 3200, "style": "full",
-     "description": "The deep-sea engine at full strength. Good luck down there."},
+    {"id": "grub", "name": "Grub the Goblin", "rating": 400, "style": "random",
+     "description": "Grabs anything shiny. Still not sure how the horsey moves."},
+    {"id": "pip", "name": "Pip the Squire", "rating": 800, "style": "sloppy", "lines": 8, "temperature": 150,
+     "description": "A knight in training. Charges at anything in reach and forgets to guard the rest."},
+    {"id": "barnaby", "name": "Barnaby the Bard", "rating": 1100, "style": "sloppy", "lines": 5, "temperature": 60,
+     "description": "Plays between songs. Usually picks a good move, sometimes just a catchy one."},
+    {"id": "elowen", "name": "Elowen the Elf", "rating": 1500, "style": "limited", "elo": 1500,
+     "description": "A sharp-eyed archer. Spots a loose piece from across the board."},
+    {"id": "ambrose", "name": "Ambrose the Monk", "rating": 1800, "style": "book", "elo": 1800,
+     "description": "Has copied out every opening book in the monastery library."},
+    {"id": "morwen", "name": "Morwen the Sorceress", "rating": 2200, "style": "limited", "elo": 2200,
+     "description": "Sees five moves ahead in a crystal ball."},
+    {"id": "ignis", "name": "Ignis the Dragon", "rating": 3200, "style": "full",
+     "description": "Full-strength Stockfish. Hoards wins like gold. Good luck."},
 ]
 BY_ID = {bot["id"]: bot for bot in BOTS}
 
-PUBLIC_FIELDS = ("id", "name", "emoji", "rating", "description")
+PUBLIC_FIELDS = ("id", "name", "rating", "description")
 BOOK_TOLERANCE = 25  # centipawns: book moves this close to the best are fair game
 
 

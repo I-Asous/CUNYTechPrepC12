@@ -6,11 +6,11 @@ import { Game3D, moveFrom, moveTo, movePromotion } from "./engine.js";
 import { PAWN, PIECES } from "./variants.js";
 
 export const BOTS_3D = [
-  { id: "snail", emoji: "🐌", name: "Shelly the Snail", short: "Shelly", description: "Takes it slow. Often wanders off mid-plan.",
+  { id: "flick", name: "Flick the Fairy", short: "Flick", description: "Flits about. Often wanders off mid-plan.",
     depth: 1, noise: 120, randomChance: 0.25, timeMs: 400 },
-  { id: "octo", emoji: "🐙", name: "Otto the Octopus", short: "Otto", description: "Eight arms, sees two moves ahead.",
+  { id: "zephyr", name: "Zephyr the Genie", short: "Zephyr", description: "Floats above the board. Sees two moves ahead.",
     depth: 2, noise: 25, randomChance: 0, timeMs: 1200 },
-  { id: "zorp", emoji: "🛸", name: "Zorp from Space", short: "Zorp", description: "Born in zero gravity. Thinks in cubes.",
+  { id: "nefer", name: "Nefer the Sphinx", short: "Nefer", description: "Asks riddles in three dimensions. Sees five moves deep.",
     depth: 5, noise: 4, randomChance: 0, timeMs: 1800 },
 ];
 

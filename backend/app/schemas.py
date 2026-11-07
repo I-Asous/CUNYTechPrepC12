@@ -53,7 +53,6 @@ class ChatResponse(BaseModel):
 class Bot(BaseModel):
     id: str
     name: str
-    emoji: str  # avatar
     rating: int  # rough estimate
     description: str
 

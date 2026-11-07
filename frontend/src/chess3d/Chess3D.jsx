@@ -4,6 +4,7 @@ import Confetti from "../components/Confetti.jsx";
 import MoveHistory from "../components/MoveHistory.jsx";
 import Board3D from "./Board3D.jsx";
 import { BOTS_3D } from "./bot.js";
+import Avatar from "../components/Avatar.jsx";
 import { Game3D, moveFrom, moveTo } from "./engine.js";
 import { VARIANTS, pieceRules } from "./variants.js";
 
@@ -25,7 +26,7 @@ function statusText(status, game, playerColor, bot, thinking) {
 
 // 3D chess against a bot, in a rotatable Three.js view.
 export default function Chess3D() {
-  const [settings, setSettings] = useState({ variantId: "raumschach", botId: "octo", playerColor: 1 });
+  const [settings, setSettings] = useState({ variantId: "raumschach", botId: "zephyr", playerColor: 1 });
   const [game, setGame] = useState(() => new Game3D("raumschach"));
   const [version, setVersion] = useState(0);   // bumped after every change to `game`
   const [selected, setSelected] = useState(null);
@@ -35,7 +36,7 @@ export default function Chess3D() {
   const request = useRef(0);  // id of the bot request we're waiting for
 
   // What the player has picked for the next game (applied by "Let's play!").
-  const [pick, setPick] = useState({ variantId: "raumschach", botId: "octo", color: 1 });
+  const [pick, setPick] = useState({ variantId: "raumschach", botId: "zephyr", color: 1 });
 
   const bot = BOTS_3D.find((b) => b.id === settings.botId);
   const { playerColor } = settings;
@@ -148,7 +149,7 @@ export default function Chess3D() {
               <button key={b.id} type="button" role="radio" aria-checked={pick.botId === b.id} aria-label={b.name}
                       className={`bot-card${pick.botId === b.id ? " chosen" : ""}`} title={b.description}
                       onClick={() => setPick({ ...pick, botId: b.id })}>
-                <span className="bot-emoji" aria-hidden="true">{b.emoji}</span>
+                <Avatar id={b.id} />
                 <span className="bot-name">{b.short}</span>
                 <span className="bot-rating">{["easy", "medium", "hard"][BOTS_3D.indexOf(b)]}</span>
               </button>
@@ -180,7 +181,7 @@ export default function Chess3D() {
           <p className="status">
             {statusText(status, game, playerColor, bot, thinking)}
             {thinking && (
-              <span className="thinking"> {bot.emoji} is thinking<span className="dots"><span>.</span><span>.</span><span>.</span></span></span>
+              <span className="thinking"> <Avatar id={bot.id} /> is thinking<span className="dots"><span>.</span><span>.</span><span>.</span></span></span>
             )}
           </p>
           <div className="buttons">

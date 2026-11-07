@@ -13,6 +13,9 @@
   --grid: rgba(239, 122, 102, 0.13);  /* graph paper behind the board */
   --piece-light: #ffffff;
   --piece-dark: var(--ink);
+  --confetti-1: var(--ink);
+  --confetti-2: var(--line);
+  --confetti-3: var(--hatch);
 
   --font: "Inter Tight", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-pieces: "Segoe UI Symbol", "Noto Sans Symbols 2", "DejaVu Sans", "Apple Symbols", sans-serif;
@@ -131,6 +134,57 @@ header .corner:last-child { border-left: 1px solid var(--line); }
   border-left: 1px solid var(--line);
   font-size: 0.75rem;
   font-weight: 300;
+}
+
+/* The theme switch (ThemeToggle.jsx) in the top-right corner: two stacked
+   icons, the theme in use filled in. */
+.theme-corner {
+  display: flex;
+  justify-content: center;
+  padding-top: 14px;
+}
+
+.theme-toggle {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  height: fit-content;
+  padding: 2px;
+  border: 1px solid var(--ink);
+  border-radius: 0;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.theme-option {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+}
+
+.theme-option svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.theme-option circle {
+  fill: currentColor;
+  stroke: none;
+}
+
+.theme-option.on {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.theme-toggle:hover .theme-option:not(.on) {
+  background: var(--tint);
 }
 
 /* Rails down both edges, with labels turned on their side. */
@@ -569,19 +623,20 @@ main {
   padding: 8px 2px 6px;
   border: 1px solid var(--line);
   border-radius: 0;
-  background: var(--paper);
+  --card-bg: var(--paper);
+  background: var(--card-bg);
   color: var(--ink);
 }
 
-.bot-card:hover:not(:disabled) {
-  background: var(--tint);
+.bot-card:not(.chosen):hover:not(:disabled) {
+  --card-bg: var(--tint);
 }
 
 .bot-card.chosen {
   position: relative;
   z-index: 1;
   border-color: var(--ink);
-  background: var(--ink);
+  --card-bg: var(--ink);
   color: var(--paper);
 }
 
@@ -589,6 +644,34 @@ main {
   font-size: 1.3rem;
   line-height: 1.2;
   filter: grayscale(1);
+}
+
+.bot-card .avatar {
+  width: 40px;
+  height: 40px;
+}
+
+/* Opponent portraits (Avatar.jsx): "f" shapes take the background behind
+   them so they hide the lines underneath; "s" shapes are solid ink. */
+.avatar {
+  display: block;
+  flex: none;
+}
+
+.avatar .f {
+  fill: var(--card-bg, var(--paper));
+}
+
+.avatar .s {
+  fill: currentColor;
+  stroke: none;
+}
+
+.status .avatar {
+  display: inline-block;
+  width: 1.5em;
+  height: 1.5em;
+  vertical-align: -0.4em;
 }
 
 .bot-card .bot-name {
@@ -1102,7 +1185,26 @@ main {
     display: none;
   }
 
+  /* The theme switch moves to the top-right of the title, lying flat. */
+  header {
+    position: relative;
+  }
+
+  header .theme-corner {
+    display: flex;
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    padding: 0;
+    border: 0;
+  }
+
+  .theme-toggle {
+    flex-direction: row;
+  }
+
   .masthead {
+    padding-right: 76px;
     border-right: 0;
     border-bottom: 1px solid var(--line);
   }
@@ -1199,5 +1301,222 @@ main {
 
   .chat-input.with-hint input + button {
     margin-left: -1px;
+  }
+}
+
+/* ---------- Gallery theme ---------- */
+
+/* The second look (theme.js): white display type and black and white
+   caption strips over an abstract painting (painting.js), framed in light
+   grey. Every component draws with the same tokens, so each region just
+   redefines them: the painted header and rails get white ink, the left
+   column is white paper, and the right column and the status bar are black
+   paper. */
+:root[data-theme="gallery"] {
+  --paper: #ffffff;
+  --ink: #111111;
+  --line: #111111;
+  --line-soft: #dddddd;
+  --tint: #eeeeee;
+  --hatch: #c9c9c9;
+  --grid: transparent;
+  --piece-light: #ffffff;
+  --piece-dark: #111111;
+  --confetti-1: #e2a33a;
+  --confetti-2: #2f8f7a;
+  --confetti-3: #e0702c;
+  --font-display: "Unbounded", "Arial Black", "Helvetica Neue", sans-serif;
+  --reserved: 262px;   /* the header is taller: a big title and two strips */
+}
+
+:root[data-theme="gallery"] body {
+  background: #e6e6e6;
+}
+
+/* The painting stays put behind the page, inside the grey margin. Until it's
+   ready (or if it can't be made) a gradient in the same colors stands in. */
+[data-theme="gallery"] .app {
+  isolation: isolate;
+  border: 0;
+}
+
+[data-theme="gallery"] .app::before {
+  content: "";
+  position: fixed;
+  inset: var(--gutter);
+  z-index: -1;
+  background:
+    var(--art, none) center / cover,
+    linear-gradient(115deg, #2a4a9a, #2f8f7a 35%, #e2a33a 55%, #e0702c 75%, #7b56a3);
+}
+
+/* Painted areas: white ink straight on the painting. */
+[data-theme="gallery"] header,
+[data-theme="gallery"] .rail {
+  --ink: #ffffff;
+  --paper: #111111;
+  --line: rgba(255, 255, 255, 0.6);
+  --tint: rgba(255, 255, 255, 0.18);
+  color: var(--ink);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="gallery"] header {
+  border-bottom: 0;
+}
+
+[data-theme="gallery"] header .corner {
+  grid-row: 1;
+  border: 0;
+}
+
+[data-theme="gallery"] .theme-corner {
+  grid-column: 5;
+}
+
+/* The title, centered over the three columns. */
+[data-theme="gallery"] .masthead {
+  grid-column: 2 / 5;
+  grid-row: 1;
+  padding: 18px 16px 16px;
+  border: 0;
+  text-align: center;
+}
+
+[data-theme="gallery"] .logo {
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--ink);
+  -webkit-text-stroke: 0;
+}
+
+/* Two caption strips across the full width: black, then white. */
+[data-theme="gallery"] .statement,
+[data-theme="gallery"] .credit {
+  grid-column: 1 / -1;
+  max-width: none;
+  padding: 5px 12px;
+  border: 0;
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: none;
+}
+
+[data-theme="gallery"] .statement {
+  grid-row: 2;
+  background: #111111;
+  color: #ffffff;
+}
+
+[data-theme="gallery"] .credit {
+  grid-row: 3;
+  background: #ffffff;
+  color: #111111;
+}
+
+[data-theme="gallery"] .rail-left button,
+[data-theme="gallery"] .rail-right span {
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+[data-theme="gallery"] .rail-left button.active {
+  text-shadow: none;
+}
+
+/* The left column is white paper. */
+[data-theme="gallery"] .setup-column {
+  border-right: 0;
+  background: var(--paper);
+}
+
+/* The right column and the status bar are black paper. */
+[data-theme="gallery"] .board-column + .side-column,
+[data-theme="gallery"] .controls {
+  --paper: #111111;
+  --ink: #ffffff;
+  --line: rgba(255, 255, 255, 0.55);
+  --line-soft: rgba(255, 255, 255, 0.16);
+  --tint: #2a2a2a;
+  border: 0;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+/* Headings and the main button in the wide display face. */
+[data-theme="gallery"] .panel h2,
+[data-theme="gallery"] .setup > .start {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+[data-theme="gallery"] .panel h2 {
+  font-size: 0.68rem;
+}
+
+[data-theme="gallery"] .setup > .start {
+  font-size: 0.8rem;
+}
+
+/* The flat board hangs on the painting in a white mat; dark squares are
+   plain grey instead of hatched. */
+[data-theme="gallery"] .board {
+  border: 8px solid var(--paper);
+}
+
+[data-theme="gallery"] .square.dark {
+  background: var(--hatch);
+}
+
+/* Anything else sitting straight on the painting gets white type or paper. */
+[data-theme="gallery"] .loading-3d {
+  color: #ffffff;
+}
+
+[data-theme="gallery"] .name-prompt .panel {
+  background: var(--paper);
+}
+
+@media (max-width: 1000px), (max-height: 560px) {
+  [data-theme="gallery"] .masthead,
+  [data-theme="gallery"] .statement,
+  [data-theme="gallery"] .credit {
+    grid-column: 1;
+  }
+
+  [data-theme="gallery"] .masthead {
+    padding-right: 76px;
+    text-align: left;
+  }
+
+  [data-theme="gallery"] .logo {
+    font-size: clamp(1.4rem, 6.5vw, 2.5rem);
+  }
+
+  /* Room to wrap on a phone. */
+  [data-theme="gallery"] .statement {
+    white-space: normal;
+  }
+
+  [data-theme="gallery"] .rail-left {
+    border-bottom: 0;
+  }
+
+  [data-theme="gallery"] .setup-column,
+  [data-theme="gallery"] .board-column + .side-column {
+    border-top: 0;
   }
 }
