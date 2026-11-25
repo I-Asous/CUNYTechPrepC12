@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
+import { useTheme } from "../theme.js";
 import { PIECES } from "./variants.js";
 
 // Vertical distance between levels, per variant (a square is 1 unit wide).
@@ -16,7 +17,8 @@ function fitDistance(radius, camera) {
   return radius / Math.sin(Math.atan(halfHeight * Math.min(1, camera.aspect)));
 }
 
-// Colors come from the page's CSS tokens, so the 3D view matches the theme.
+// Colors come from the page's CSS tokens, so the 3D view matches the theme;
+// the scene is rebuilt when the theme changes.
 function cssValue(name, fallback) {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
 }
@@ -43,8 +45,8 @@ function levelGrid(files, ranks, y, material) {
 // always face the camera and match the 2D board's look.
 const glyphTextures = new Map();
 
-function glyphTexture(type, color) {
-  const key = `${type}:${color}`;
+function glyphTexture(type, color, theme) {
+  const key = `${theme}:${type}:${color}`;
   if (glyphTextures.has(key)) return glyphTextures.get(key);
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = 128;
@@ -98,6 +100,7 @@ export default function Board3D({ game, version, selected, targets, lastMove, pl
   const three = useRef(null);
   const latest = useRef({});
   latest.current = { onSquareClick };
+  const theme = useTheme();
 
   // One-time setup: renderer, camera, controls, lights, input and render loop.
   useEffect(() => {
@@ -246,7 +249,7 @@ export default function Board3D({ game, version, selected, targets, lastMove, pl
     floor.position.set((game.files % 2) / 2, position(game.index(0, 0, 0)).y - gap, (game.ranks % 2) / 2);
     boardGroup.add(floor);
     three.current.tiles = tiles;
-  }, [variantId]);  // eslint-disable-line react-hooks/exhaustive-deps
+  }, [variantId, theme]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   // Camera: face the board from the player's side, far enough back to see
   // every level; reset on new games and "Reset view".
@@ -296,7 +299,7 @@ export default function Board3D({ game, version, selected, targets, lastMove, pl
       group.userData.square = square;
       const token = new THREE.Mesh(tokenGeometry, color === 1 ? whiteToken : blackToken);
       token.position.y = 0.1;
-      const glyph = new THREE.Sprite(new THREE.SpriteMaterial({ map: glyphTexture(Math.abs(piece), color) }));
+      const glyph = new THREE.Sprite(new THREE.SpriteMaterial({ map: glyphTexture(Math.abs(piece), color, theme) }));
       glyph.position.y = 0.55;
       glyph.scale.set(0.8, 0.8, 0.8);
       group.add(token, glyph);
@@ -324,7 +327,7 @@ export default function Board3D({ game, version, selected, targets, lastMove, pl
       marker.add(hitArea);
       markerGroup.add(marker);
     }
-  }, [version, selected, targets, lastMove]);  // eslint-disable-line react-hooks/exhaustive-deps
+  }, [version, selected, targets, lastMove, theme]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   return <div className="board3d" ref={mountRef} />;
 }

@@ -1,6 +1,7 @@
 import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import { Chess } from "chess.js";
 
+import Avatar from "./components/Avatar.jsx";
 import Board from "./components/Board.jsx";
 import BotPicker from "./components/BotPicker.jsx";
 import CoachChat from "./components/CoachChat.jsx";
@@ -8,6 +9,7 @@ import Confetti from "./components/Confetti.jsx";
 import MoveHistory from "./components/MoveHistory.jsx";
 import OnlineGame from "./components/OnlineGame.jsx";
 import PromotionPicker from "./components/PromotionPicker.jsx";
+import ThemeToggle from "./components/ThemeToggle.jsx";
 import { askCoach, bestMoveHint, botMove, createRoom, listBots, pieceHint, reviewMove } from "./api.js";
 import { kingInCheckSquare, toMove } from "./chessUtils.js";
 
@@ -43,7 +45,7 @@ const BOT_MIN_DELAY_MS = 500;  // so instant bot replies don't look like a glitc
 function startMessage(opponent) {
   if (!opponent) return "New game! You're playing both sides. 🎲";
   const { bot, color } = opponent;
-  return `${bot.emoji} ${bot.name} (~${bot.rating}) wants to play! You're ${COLOR_NAMES[color]}. Good luck!`;
+  return `${bot.name} (~${bot.rating}) wants to play! You're ${COLOR_NAMES[color]}. Good luck!`;
 }
 
 function gameStatus(game, opponent) {
@@ -95,7 +97,9 @@ export default function App() {
           or in three dimensions, with a coach who explains every move.
         </p>
         <p className="credit">Built at CUNY Tech Prep, Cohort 12.</p>
-        <span className="corner" aria-hidden="true" />
+        <div className="corner theme-corner">
+          <ThemeToggle />
+        </div>
       </header>
 
       <nav className="rail rail-left" aria-label="Game type">
@@ -323,7 +327,7 @@ function BotGame({ onCreateRoom }) {
             <p className="status">
               {gameStatus(game, opponent)}
               {botThinking && (
-                <span className="thinking"> {opponent.bot.emoji} is thinking<span className="dots"><span>.</span><span>.</span><span>.</span></span></span>
+                <span className="thinking"> <Avatar id={opponent.bot.id} /> is thinking<span className="dots"><span>.</span><span>.</span><span>.</span></span></span>
               )}
             </p>
             <div className="buttons">
