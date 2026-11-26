@@ -1,0 +1,10 @@
+# Render Blueprint: one free web service built from the Dockerfile.
+# On render.com: New > Blueprint, then pick this repo.
+services:
+  - type: web
+    name: chess-coach
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/bots
+    autoDeploy: true

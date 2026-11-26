@@ -1,0 +1,9 @@
+.git
+.claude
+**/node_modules
+**/__pycache__
+**/.venv
+**/.env
+frontend/dist
+backend/data
+chess
