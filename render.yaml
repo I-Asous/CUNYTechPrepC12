@@ -8,3 +8,15 @@ services:
     dockerfilePath: ./Dockerfile
     healthCheckPath: /api/bots
     autoDeploy: true
+    # Values are entered in the Render dashboard, not stored here.
+    # sync: false only prompts for them when a Blueprint is first created; for
+    # an existing service, add them under Environment instead.
+    envVars:
+      - key: VITE_CLERK_PUBLISHABLE_KEY   # Clerk publishable key (pk_test_... or pk_live_...)
+        sync: false
+      - key: CLERK_JWKS_URL               # https://<your-frontend-api>/.well-known/jwks.json
+        sync: false
+      - key: CLERK_AUTHORIZED_PARTIES     # this site's URL, e.g. https://chess-coach.onrender.com
+        sync: false
+      - key: DATABASE_URL                 # Neon Postgres connection string (secret)
+        sync: false

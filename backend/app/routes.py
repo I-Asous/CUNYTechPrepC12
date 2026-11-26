@@ -1,8 +1,9 @@
 """HTTP endpoints. Each one hands its work to the coach, chatbot or bots module."""
 
-from fastapi import APIRouter, WebSocket
+from fastapi import APIRouter, Depends, HTTPException, Query, WebSocket
 
-from app import bots, chatbot, coach, rooms
+from app import bots, chatbot, coach, history, rooms
+from app.auth import current_user
 from app.schemas import (
     Bot,
     BotMoveRequest,
@@ -13,13 +14,42 @@ from app.schemas import (
     CreateRoomResponse,
     HintRequest,
     HintResponse,
+    MeResponse,
     PieceHintRequest,
     PieceHintResponse,
     ReviewRequest,
     ReviewResponse,
+    SavedGame,
+    SaveGameRequest,
 )
 
 router = APIRouter()
+
+
+@router.get("/me", response_model=MeResponse)
+def me(user_id: str = Depends(current_user)):
+    """The signed-in player. Useful for checking that sign-in works end to end."""
+    return {"user_id": user_id, "games_saved": history.count_games(user_id)}
+
+
+@router.post("/games", response_model=SavedGame)
+def save_game(request: SaveGameRequest, user_id: str = Depends(current_user)):
+    """Save a finished game against a bot to the player's match history."""
+    try:
+        return history.save_bot_game(user_id, request.bot, request.color, request.moves)
+    except history.GameError as error:
+        raise HTTPException(400, str(error))
+    except history.NotConfigured as error:
+        raise HTTPException(503, str(error))
+
+
+@router.get("/games", response_model=list[SavedGame])
+def list_games(limit: int = Query(20, ge=1, le=100), user_id: str = Depends(current_user)):
+    """The player's most recent saved games, newest first."""
+    try:
+        return history.list_games(user_id, limit)
+    except history.NotConfigured as error:
+        raise HTTPException(503, str(error))
 
 
 @router.post("/review", response_model=ReviewResponse)

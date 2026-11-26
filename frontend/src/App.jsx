@@ -10,7 +10,8 @@ import MoveHistory from "./components/MoveHistory.jsx";
 import OnlineGame from "./components/OnlineGame.jsx";
 import PromotionPicker from "./components/PromotionPicker.jsx";
 import ThemeToggle from "./components/ThemeToggle.jsx";
-import { askCoach, bestMoveHint, botMove, createRoom, listBots, pieceHint, reviewMove } from "./api.js";
+import { askCoach, bestMoveHint, botMove, createRoom, listBots, pieceHint, reviewMove, saveGame } from "./api.js";
+import { AccountButton } from "./auth.jsx";
 import { kingInCheckSquare, toMove } from "./chessUtils.js";
 
 // Three.js is big, so the 3D page only loads when someone opens it.
@@ -99,6 +100,7 @@ export default function App() {
         <p className="credit">Built at CUNY Tech Prep, Cohort 12.</p>
         <div className="corner theme-corner">
           <ThemeToggle />
+          <AccountButton />
         </div>
       </header>
 
@@ -147,8 +149,23 @@ function BotGame({ onCreateRoom }) {
   const nextId = useRef(1);
   const offlineNotified = useRef(false);
   const botRequested = useRef(null);  // "gameId|fen" the bot was last asked to move in
+  const savedGameId = useRef(null);   // gameId of the last game sent to the match history
 
   const playerToMove = !opponent || game.turn() === opponent.color;
+
+  // When a game against a bot ends, save it to the signed-in player's match
+  // history (saveGame does nothing for guests). Each game is saved once, so
+  // undoing past the end and finishing again doesn't add a second entry.
+  useEffect(() => {
+    if (!opponent || !game.isGameOver() || savedGameId.current === gameId) return;
+    savedGameId.current = gameId;
+    const moves = game.history({ verbose: true }).map((move) => move.lan);
+    saveGame(opponent.bot.id, opponent.color, moves)
+      .then((saved) => {
+        if (saved) addMessage({ from: "coach", kind: "saved", text: "📒 Saved to your match history." });
+      })
+      .catch((error) => console.warn("Couldn't save the game:", error));
+  }, [fen, gameId, opponent]);
 
   useEffect(() => {
     listBots().then((list) => { setBots(list); setOnline(true); }).catch(() => {});

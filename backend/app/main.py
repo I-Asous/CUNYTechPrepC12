@@ -17,7 +17,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
-from app import engine
+from app import db, engine
 from app.routes import router
 
 FRONTEND_DIST = Path(
@@ -30,6 +30,7 @@ FRONTEND_DIST = Path(
 async def lifespan(app):
     yield
     engine.close()  # stop the Stockfish subprocess
+    db.close()      # close database connections
 
 
 app = FastAPI(title="Chess Coach API", lifespan=lifespan)

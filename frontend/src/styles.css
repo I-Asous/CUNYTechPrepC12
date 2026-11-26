@@ -137,11 +137,40 @@ header .corner:last-child { border-left: 1px solid var(--line); }
 }
 
 /* The theme switch (ThemeToggle.jsx) in the top-right corner: two stacked
-   icons, the theme in use filled in. */
+   icons, the theme in use filled in. The account button (auth.jsx) sits
+   below it. */
 .theme-corner {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
   padding-top: 14px;
+}
+
+/* Same footprint and outline as the theme switch. */
+.sign-in {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--ink);
+  border-radius: 0;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.sign-in:hover {
+  background: var(--tint);
+}
+
+.sign-in svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.3;
+  stroke-linecap: round;
 }
 
 .theme-toggle {
@@ -1192,6 +1221,9 @@ main {
 
   header .theme-corner {
     display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 8px;
     position: absolute;
     top: 12px;
     right: 12px;
@@ -1204,7 +1236,7 @@ main {
   }
 
   .masthead {
-    padding-right: 76px;
+    padding-right: 112px;  /* room for the theme switch and account button */
     border-right: 0;
     border-bottom: 1px solid var(--line);
   }
@@ -1498,7 +1530,7 @@ main {
   }
 
   [data-theme="gallery"] .masthead {
-    padding-right: 76px;
+    padding-right: 112px;  /* room for the theme switch and account button */
     text-align: left;
   }
 

@@ -95,6 +95,51 @@ python -m app.data.build        # downloads and loads the datasets (see below)
 uvicorn app.main:app --reload --port 8000
 ```
 
+### Accounts and Match History (optional)
+
+Players can sign in with [Clerk](https://clerk.com/) to save their games against bots. Guests can still play everything; their games just aren't saved. Without the settings below, the site runs with no sign-in button.
+
+1. Create an application in the Clerk dashboard. From **API keys**, copy the publishable key and the JWKS URL.
+2. Create a free Postgres database on [Neon](https://neon.com/) and copy its connection string.
+3. Copy `frontend/.env.example` to `frontend/.env.local` and `backend/.env.example` to `backend/.env`, then fill them in. Both files are gitignored. Never commit the database connection string.
+4. Start the backend with the settings loaded:
+
+   ```bash
+   uvicorn app.main:app --reload --port 8000 --env-file .env
+   ```
+
+| Variable                     | Used by  | What it is                                                         |
+| ---------------------------- | -------- | ------------------------------------------------------------------ |
+| `VITE_CLERK_PUBLISHABLE_KEY` | frontend | Clerk publishable key. Turns on the sign-in button.                |
+| `CLERK_JWKS_URL`             | backend  | Clerk's public keys, used to check sign-in tokens                  |
+| `CLERK_AUTHORIZED_PARTIES`   | backend  | Comma-separated site URLs allowed to send tokens (optional)        |
+| `DATABASE_URL`               | backend  | Postgres connection string. Secret.                                |
+
+When a signed-in player's game against a bot ends, the frontend sends its moves to `POST /api/games`. The server replays them, works out the result itself, and saves the game with its PGN. `GET /api/games` lists the player's recent games, and `GET /api/me` shows who is signed in.
+
+## Deployment
+
+The site runs on [Render](https://render.com/)'s free plan as a single web service. The [Dockerfile](Dockerfile) builds the frontend, installs Stockfish and the backend, and starts uvicorn. FastAPI serves the API under `/api` and the built frontend for everything else, so the site and the API share one URL.
+
+Render deploys from `main` using [render.yaml](render.yaml), and every merge to `main` redeploys the site. To set it up again from scratch, open render.com, choose **New → Blueprint**, and pick this repo.
+
+Sign-in and saving games need the four variables from [Accounts and Match History](#accounts-and-match-history-optional), set under the service's **Environment** tab. Set `CLERK_AUTHORIZED_PARTIES` to the site's `onrender.com` URL. Render passes `VITE_CLERK_PUBLISHABLE_KEY` to the Docker build, which bakes it into the frontend, so changing it needs a redeploy. Clerk's production keys need a domain you own, so the `onrender.com` site uses the development keys.
+
+To try the production build locally:
+
+```bash
+docker build -t chess-coach .
+docker run -p 8000:8000 chess-coach
+```
+
+Then open http://localhost:8000.
+
+Limits of the free plan:
+
+- **Sleep:** the service goes to sleep after 15 minutes without visitors, and the next visit takes about a minute to wake it.
+- **No datasets:** the 1 GB dataset database isn't deployed, so the deployed coach skips opening names, puzzle tactics and masters statistics. Move grading, hints, bots and chat still work.
+- **Restarts end online games:** online games are kept in memory, so they're lost whenever Render restarts or redeploys the service.
+
 ## Practice Bots
 
 Pick an opponent and a color in the Opponent panel, then press Start game. The coach reviews your moves, not the bot's. Undo takes back your last move and the bot's reply.
@@ -165,6 +210,8 @@ chess/
 backend/
 └── app/
     ├── main.py, routes.py, schemas.py  # FastAPI app and endpoints
+    ├── auth.py                         # checks Clerk sign-in tokens
+    ├── db.py, history.py               # saved games: the database and saving/listing them
     ├── coach.py                        # grades moves, piece hints, best-move hints
     ├── chatbot.py                      # answers chat questions by topic
     ├── bots.py                         # practice opponents
@@ -176,6 +223,7 @@ frontend/      # React website
 └── src/
     ├── App.jsx                     # bot games, and switching to an online game
     ├── api.js                      # calls to the backend
+    ├── auth.jsx                    # Clerk sign-in and the account button
     ├── useRoom.js                  # live connection to an online game
     ├── chessUtils.js               # small helpers shared by both kinds of game
     ├── chess3d/
@@ -193,4 +241,6 @@ frontend/      # React website
         ├── OnlineGame.jsx          # a game against a friend
         ├── GameChat.jsx            # chat between players
         └── InvitePanel.jsx         # invite link and who's in the game
+Dockerfile     # production build: frontend + backend + Stockfish in one container
+render.yaml    # Render deployment settings
 ```

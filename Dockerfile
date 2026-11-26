@@ -7,6 +7,11 @@ WORKDIR /frontend
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 COPY frontend/ ./
+# Vite bakes this into the page at build time (sign-in is off without it).
+# Render passes the service's environment variables in as build args. It's a
+# publishable key, so it's fine for it to end up in the built JavaScript.
+ARG VITE_CLERK_PUBLISHABLE_KEY
+ENV VITE_CLERK_PUBLISHABLE_KEY=$VITE_CLERK_PUBLISHABLE_KEY
 RUN npm run build
 
 # --- Run the backend ---

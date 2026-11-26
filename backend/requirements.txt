@@ -2,3 +2,6 @@ fastapi
 uvicorn[standard]
 chess
 zstandard
+pyjwt[crypto]
+sqlalchemy
+psycopg[binary]
